@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { MapPin, Calendar, ExternalLink, Plus, Check, Search, Loader2, Clock, FileText, Building2, Flame, Briefcase } from 'lucide-react'
+import { MapPin, Calendar, ExternalLink, Plus, Check, Search, Loader2, Clock, Building2, Flame, Briefcase } from 'lucide-react'
 import { useJobs } from '../hooks/useJobs'
 import { useApplications } from '../hooks/useApplications'
 import { useAuth } from '../hooks/useAuth'
@@ -152,13 +152,7 @@ export default function Jobs() {
               </button>
             )
           })}
-          <button
-            onClick={() => navigate('/exam')}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-white text-slate-600 border border-slate-200 hover:border-amber-300 hover:text-amber-600 transition-colors"
-          >
-            <FileText className="w-3.5 h-3.5" />
-            笔试真题汇总
-          </button>
+{/* 笔试真题入口已移至顶部导航栏 */}
         </div>
 
         {/* Active filter indicator */}

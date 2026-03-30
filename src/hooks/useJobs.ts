@@ -54,9 +54,8 @@ export function useJobs(filters?: JobFilters) {
     const tag = filters?.quickTag ?? '全部'
 
     // Server-side quick tag filters
-    if (tag === '24h最新') {
-      const h24ago = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-      query = query.gte('updated_at', h24ago)
+    if (tag === '最近更新') {
+      // No time filter — just sorted by updated_at desc, limited to 50 via PAGE_SIZE
     } else if (tag === '国企央企') {
       query = query.eq('company_type', '央国企')
     } else if (tag === '26届热门春招') {
@@ -105,12 +104,19 @@ export function useJobs(filters?: JobFilters) {
       } else {
         setJobs(rows)
       }
-      setHasMore(rows.length === PAGE_SIZE)
+      // "最近更新" caps at 50 total
+      const tag = filters?.quickTag ?? '全部'
+      const totalLoaded = append ? jobs.length + rows.length : rows.length
+      if (tag === '最近更新') {
+        setHasMore(rows.length === PAGE_SIZE && totalLoaded < 50)
+      } else {
+        setHasMore(rows.length === PAGE_SIZE)
+      }
     }
 
     setLoading(false)
     setLoadingMore(false)
-  }, [buildQuery])
+  }, [buildQuery, filters?.quickTag, jobs.length])
 
   // Fetch aggregate stats
   const fetchStats = useCallback(async () => {

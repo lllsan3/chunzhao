@@ -10,7 +10,7 @@ import { normalizeCity, getUniqueCities } from '../lib/cityNormalize'
 
 const QUICK_TAGS = [
   { key: '全部', icon: null, label: '全部' },
-  { key: '24h最新', icon: Clock, label: '24h最新' },
+  { key: '最近更新', icon: Clock, label: '最近更新' },
   { key: '26届热门春招', icon: Flame, label: '26届热门春招' },
   { key: '国企央企', icon: Building2, label: '国企央企汇总' },
   { key: '大厂实习', icon: Briefcase, label: '大厂实习汇总' },

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { MapPin, Calendar, ExternalLink, Plus, Check, Search, Loader2 } from 'lucide-react'
+import { MapPin, Calendar, ExternalLink, Plus, Check, Search, Loader2, Clock, FileText } from 'lucide-react'
 import { useJobs } from '../hooks/useJobs'
 import { useApplications } from '../hooks/useApplications'
 import { useAuth } from '../hooks/useAuth'
@@ -8,8 +8,10 @@ import { useToast } from '../components/Toast'
 import { COMPANY_TYPES } from '../lib/constants'
 import { normalizeCity, getUniqueCities } from '../lib/cityNormalize'
 
+type QuickTag = '全部' | '24h最新' | '笔试真题'
+
 export default function Jobs() {
-  const { jobs, loading, loadingMore, hasMore, loadMore } = useJobs()
+  const { jobs, loading, loadingMore, hasMore, loadMore, totalCount, todayCount } = useJobs()
   const { applications, importJob } = useApplications()
   const { user } = useAuth()
   const { toast } = useToast()
@@ -17,6 +19,7 @@ export default function Jobs() {
   const [search, setSearch] = useState('')
   const [cityFilter, setCityFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('全部')
+  const [quickTag, setQuickTag] = useState<QuickTag>('全部')
 
   // Normalized unique cities for dropdown
   const cities = useMemo(
@@ -32,6 +35,8 @@ export default function Jobs() {
 
   // Filter jobs (city filter uses normalized comparison)
   const filtered = useMemo(() => {
+    const now = Date.now()
+    const h24 = 24 * 60 * 60 * 1000
     return jobs.filter((job) => {
       if (search) {
         const q = search.toLowerCase()
@@ -48,9 +53,14 @@ export default function Jobs() {
       if (typeFilter !== '全部') {
         if (job.company_type !== typeFilter) return false
       }
+      // Quick tag filter
+      if (quickTag === '24h最新') {
+        const updatedMs = new Date(job.updated_at).getTime()
+        if (now - updatedMs > h24) return false
+      }
       return true
     })
-  }, [jobs, search, cityFilter, typeFilter])
+  }, [jobs, search, cityFilter, typeFilter, quickTag])
 
   const handleImport = async (job: (typeof jobs)[0]) => {
     if (!user) {
@@ -73,10 +83,15 @@ export default function Jobs() {
     <div className="min-h-screen bg-[#F7F8FA]">
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-800">职位库</h1>
-            <p className="text-sm text-slate-500 mt-1">发现并导入适合你的春招机会</p>
+            <p className="text-sm text-slate-500 mt-1">
+              共 <span className="font-medium text-slate-700">{totalCount}</span> 个职位
+              {todayCount > 0 && (
+                <> · 今日更新 <span className="font-medium text-blue-600">{todayCount}</span> 个</>
+              )}
+            </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative">
@@ -111,6 +126,37 @@ export default function Jobs() {
               ))}
             </select>
           </div>
+        </div>
+
+        {/* Quick tags */}
+        <div className="flex flex-wrap gap-2 mb-5">
+          {([
+            { key: '全部' as QuickTag, icon: null, label: '全部' },
+            { key: '24h最新' as QuickTag, icon: Clock, label: '24h最新' },
+          ]).map(({ key, icon: Icon, label }) => {
+            const active = quickTag === key
+            return (
+              <button
+                key={key}
+                onClick={() => setQuickTag(key)}
+                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  active
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-300 hover:text-blue-600'
+                }`}
+              >
+                {Icon && <Icon className="w-3.5 h-3.5" />}
+                {label}
+              </button>
+            )
+          })}
+          <button
+            onClick={() => navigate('/exam')}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-white text-slate-600 border border-slate-200 hover:border-amber-300 hover:text-amber-600 transition-colors"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            笔试真题汇总
+          </button>
         </div>
 
         {/* Grid */}

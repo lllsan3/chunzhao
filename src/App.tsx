@@ -9,6 +9,7 @@ import ApplicationDetail from './pages/ApplicationDetail'
 import Board from './pages/Board'
 import Dashboard from './pages/Dashboard'
 import Pricing from './pages/Pricing'
+import Exam from './pages/Exam'
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="/board" element={<Board />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/exam" element={<Exam />} />
           </Routes>
         </div>
       </ToastProvider>

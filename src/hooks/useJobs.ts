@@ -30,6 +30,8 @@ export function useJobs() {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
+  const [totalCount, setTotalCount] = useState(0)
+  const [todayCount, setTodayCount] = useState(0)
 
   const fetchPage = useCallback(async (offset: number, append: boolean) => {
     if (append) {
@@ -57,9 +59,25 @@ export function useJobs() {
     setLoadingMore(false)
   }, [])
 
+  // Fetch aggregate stats (total + today updated)
+  const fetchStats = useCallback(async () => {
+    const { count } = await supabase
+      .from('jobs')
+      .select('*', { count: 'exact', head: true })
+    setTotalCount(count ?? 0)
+
+    const today = new Date().toISOString().slice(0, 10)
+    const { count: todayN } = await supabase
+      .from('jobs')
+      .select('*', { count: 'exact', head: true })
+      .gte('updated_at', today + 'T00:00:00')
+    setTodayCount(todayN ?? 0)
+  }, [])
+
   useEffect(() => {
     fetchPage(0, false)
-  }, [fetchPage])
+    fetchStats()
+  }, [fetchPage, fetchStats])
 
   const loadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
@@ -71,7 +89,8 @@ export function useJobs() {
     setJobs([])
     setHasMore(true)
     fetchPage(0, false)
-  }, [fetchPage])
+    fetchStats()
+  }, [fetchPage, fetchStats])
 
-  return { jobs, loading, loadingMore, hasMore, loadMore, refetch }
+  return { jobs, loading, loadingMore, hasMore, loadMore, refetch, totalCount, todayCount }
 }

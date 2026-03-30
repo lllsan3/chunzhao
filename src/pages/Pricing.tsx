@@ -1,4 +1,8 @@
-import { Check, Sparkles } from 'lucide-react'
+import { useState } from 'react'
+import { Check, Sparkles, Ticket, Loader2, ShieldCheck } from 'lucide-react'
+import { useSubscription } from '../hooks/useSubscription'
+import { useAuth } from '../hooks/useAuth'
+import { useNavigate } from 'react-router-dom'
 
 const plans = [
   {
@@ -30,7 +34,38 @@ const plans = [
   },
 ]
 
+const PLAN_TYPE_LABEL: Record<string, string> = {
+  trial: '体验版',
+  seasonal: '春招季卡',
+  lifetime: '终身会员',
+}
+
 export default function Pricing() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const { membership, loading: memberLoading, redeem } = useSubscription()
+  const [showRedeem, setShowRedeem] = useState(false)
+  const [code, setCode] = useState('')
+  const [redeeming, setRedeeming] = useState(false)
+  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
+
+  const handleRedeem = async () => {
+    if (!user) {
+      navigate('/login?redirect=/pricing')
+      return
+    }
+    if (!code.trim()) return
+
+    setRedeeming(true)
+    setResult(null)
+    const res = await redeem(code)
+    setResult(res)
+    setRedeeming(false)
+    if (res.success) {
+      setCode('')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#F7F8FA]">
       {/* Header */}
@@ -41,8 +76,27 @@ export default function Pricing() {
         </p>
       </section>
 
+      {/* Active membership banner */}
+      {!memberLoading && membership.isMember && (
+        <div className="max-w-4xl mx-auto px-4 -mt-14 mb-4 relative z-10">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
+            <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-emerald-800">
+                你已是 {PLAN_TYPE_LABEL[membership.planType ?? ''] || membership.planType} 会员
+              </p>
+              <p className="text-xs text-emerald-600 mt-0.5">
+                {membership.expiresAt
+                  ? `有效期至 ${new Date(membership.expiresAt).toLocaleDateString('zh-CN')}`
+                  : '永久有效'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Cards */}
-      <section className="max-w-4xl mx-auto px-4 -mt-10 pb-16">
+      <section className={`max-w-4xl mx-auto px-4 pb-10 ${!membership.isMember ? '-mt-10' : ''}`}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {plans.map((plan) => (
             <div
@@ -99,6 +153,52 @@ export default function Pricing() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Redeem code section */}
+      <section className="max-w-md mx-auto px-4 pb-16">
+        {!showRedeem ? (
+          <button
+            onClick={() => setShowRedeem(true)}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-slate-300 text-sm text-slate-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
+          >
+            <Ticket className="w-4 h-4" />
+            有兑换码？点击兑换
+          </button>
+        ) : (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+            <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+              <Ticket className="w-4 h-4 text-blue-600" />
+              输入兑换码
+            </h3>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={code}
+                onChange={(e) => {
+                  setCode(e.target.value.toUpperCase())
+                  setResult(null)
+                }}
+                onKeyDown={(e) => e.key === 'Enter' && handleRedeem()}
+                placeholder="请输入 8 位兑换码"
+                maxLength={12}
+                className="flex-1 px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white tracking-widest text-center font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+              <button
+                onClick={handleRedeem}
+                disabled={redeeming || !code.trim()}
+                className="px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+              >
+                {redeeming ? <Loader2 className="w-4 h-4 animate-spin" /> : '兑换'}
+              </button>
+            </div>
+            {result && (
+              <p className={`mt-3 text-xs ${result.success ? 'text-emerald-600' : 'text-red-500'}`}>
+                {result.message}
+              </p>
+            )}
+          </div>
+        )}
       </section>
     </div>
   )

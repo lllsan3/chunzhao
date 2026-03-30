@@ -1,14 +1,15 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { MapPin, Calendar, ExternalLink, Plus, Check, Search } from 'lucide-react'
+import { MapPin, Calendar, ExternalLink, Plus, Check, Search, Loader2 } from 'lucide-react'
 import { useJobs } from '../hooks/useJobs'
 import { useApplications } from '../hooks/useApplications'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../components/Toast'
 import { COMPANY_TYPES } from '../lib/constants'
+import { normalizeCity, getUniqueCities } from '../lib/cityNormalize'
 
 export default function Jobs() {
-  const { jobs, loading } = useJobs()
+  const { jobs, loading, loadingMore, hasMore, loadMore } = useJobs()
   const { applications, importJob } = useApplications()
   const { user } = useAuth()
   const { toast } = useToast()
@@ -17,18 +18,11 @@ export default function Jobs() {
   const [cityFilter, setCityFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('全部')
 
-  // Unique cities for filter dropdown
-  const cities = useMemo(() => {
-    const set = new Set<string>()
-    jobs.forEach((j) => {
-      if (j.city) {
-        // Take first city if multi-city
-        const first = j.city.split(/[\s,，]/)[0].trim()
-        if (first) set.add(first)
-      }
-    })
-    return ['所有城市', ...Array.from(set).sort()]
-  }, [jobs])
+  // Normalized unique cities for dropdown
+  const cities = useMemo(
+    () => getUniqueCities(jobs.map((j) => j.city)),
+    [jobs]
+  )
 
   // Set of already-imported job IDs
   const importedJobIds = useMemo(
@@ -36,10 +30,9 @@ export default function Jobs() {
     [applications]
   )
 
-  // Filter jobs
+  // Filter jobs (city filter uses normalized comparison)
   const filtered = useMemo(() => {
     return jobs.filter((job) => {
-      // search
       if (search) {
         const q = search.toLowerCase()
         if (
@@ -48,11 +41,10 @@ export default function Jobs() {
         )
           return false
       }
-      // city
-      if (cityFilter && cityFilter !== '所有城市') {
-        if (!job.city?.includes(cityFilter)) return false
+      if (cityFilter) {
+        const norm = normalizeCity(job.city)
+        if (norm !== cityFilter) return false
       }
-      // company type
       if (typeFilter !== '全部') {
         if (job.company_type !== typeFilter) return false
       }
@@ -102,10 +94,9 @@ export default function Jobs() {
               onChange={(e) => setCityFilter(e.target.value)}
               className="px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
+              <option value="">所有城市</option>
               {cities.map((c) => (
-                <option key={c} value={c === '所有城市' ? '' : c}>
-                  {c}
-                </option>
+                <option key={c} value={c}>{c}</option>
               ))}
             </select>
             <select
@@ -128,92 +119,114 @@ export default function Jobs() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-20 text-slate-400">暂无匹配职位</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.map((job) => {
-              const imported = importedJobIds.has(job.id)
-              return (
-                <div
-                  key={job.id}
-                  className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex flex-col"
-                >
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <Link
-                      to={`/jobs/${job.id}`}
-                      className="font-semibold text-slate-800 hover:text-blue-600 transition-colors line-clamp-1"
-                    >
-                      {job.title}
-                    </Link>
-                    {job.tags.length > 0 && (
-                      <div className="flex gap-1 shrink-0">
-                        {job.tags.slice(0, 2).map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-sm text-slate-600 mb-3">{job.company}</p>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mb-4">
-                    {job.city && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        {job.city}
-                      </span>
-                    )}
-                    {job.deadline && (
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" />
-                        截止: {job.deadline}
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-auto flex items-center gap-2">
-                    {job.jd_url && (
-                      <a
-                        href={job.jd_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filtered.map((job) => {
+                const imported = importedJobIds.has(job.id)
+                return (
+                  <div
+                    key={job.id}
+                    className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex flex-col"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <Link
+                        to={`/jobs/${job.id}`}
+                        className="font-semibold text-slate-800 hover:text-blue-600 transition-colors line-clamp-1"
                       >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        查看原JD
-                      </a>
-                    )}
-                    <button
-                      onClick={() => handleImport(job)}
-                      disabled={imported}
-                      className={`ml-auto flex items-center gap-1 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
-                        imported
-                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                          : 'bg-slate-900 text-white hover:bg-slate-800'
-                      }`}
-                    >
-                      {imported ? (
-                        <>
-                          <Check className="w-3.5 h-3.5" />
-                          已导入
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-3.5 h-3.5" />
-                          导入申请池
-                        </>
+                        {job.title}
+                      </Link>
+                      {job.tags.length > 0 && (
+                        <div className="flex gap-1 shrink-0">
+                          {job.tags.slice(0, 2).map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
                       )}
-                    </button>
+                    </div>
+                    <p className="text-sm text-slate-600 mb-3">{job.company}</p>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mb-4">
+                      {job.city && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5" />
+                          {job.city}
+                        </span>
+                      )}
+                      {job.deadline && (
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5" />
+                          截止: {job.deadline}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-auto flex items-center gap-2">
+                      {job.jd_url && (
+                        <a
+                          href={job.jd_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          查看原JD
+                        </a>
+                      )}
+                      <button
+                        onClick={() => handleImport(job)}
+                        disabled={imported}
+                        className={`ml-auto flex items-center gap-1 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+                          imported
+                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                            : 'bg-slate-900 text-white hover:bg-slate-800'
+                        }`}
+                      >
+                        {imported ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" />
+                            已导入
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-3.5 h-3.5" />
+                            导入申请池
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+
+            {/* Load more */}
+            {hasMore && (
+              <div className="text-center mt-8">
+                <button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                >
+                  {loadingMore ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      加载中...
+                    </>
+                  ) : (
+                    '加载更多职位'
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {/* Footer */}
-        <p className="text-center text-xs text-slate-400 mt-8 pb-4">
-          共 {filtered.length} 个职位
+        <p className="text-center text-xs text-slate-400 mt-6 pb-4">
+          已加载 {filtered.length} 个职位{hasMore ? '，点击加载更多' : ''}
         </p>
       </div>
     </div>

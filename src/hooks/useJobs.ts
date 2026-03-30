@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 export interface Job {
@@ -23,26 +23,55 @@ export interface Job {
   updated_at: string
 }
 
+const PAGE_SIZE = 36
+
 export function useJobs() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
 
-  useEffect(() => {
-    fetchJobs()
-  }, [])
+  const fetchPage = useCallback(async (offset: number, append: boolean) => {
+    if (append) {
+      setLoadingMore(true)
+    } else {
+      setLoading(true)
+    }
 
-  async function fetchJobs() {
-    setLoading(true)
     const { data, error } = await supabase
       .from('jobs')
       .select('*')
       .order('created_at', { ascending: false })
+      .range(offset, offset + PAGE_SIZE - 1)
 
     if (!error && data) {
-      setJobs(data)
+      if (append) {
+        setJobs((prev) => [...prev, ...data])
+      } else {
+        setJobs(data)
+      }
+      setHasMore(data.length === PAGE_SIZE)
     }
-    setLoading(false)
-  }
 
-  return { jobs, loading, refetch: fetchJobs }
+    setLoading(false)
+    setLoadingMore(false)
+  }, [])
+
+  useEffect(() => {
+    fetchPage(0, false)
+  }, [fetchPage])
+
+  const loadMore = useCallback(() => {
+    if (!loadingMore && hasMore) {
+      fetchPage(jobs.length, true)
+    }
+  }, [fetchPage, jobs.length, loadingMore, hasMore])
+
+  const refetch = useCallback(() => {
+    setJobs([])
+    setHasMore(true)
+    fetchPage(0, false)
+  }, [fetchPage])
+
+  return { jobs, loading, loadingMore, hasMore, loadMore, refetch }
 }

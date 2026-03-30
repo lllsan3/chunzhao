@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { MapPin, Calendar, ExternalLink, Plus, Check, Search, Loader2, Clock, FileText } from 'lucide-react'
+import { MapPin, Calendar, ExternalLink, Plus, Check, Search, Loader2, Clock, FileText, Building2, Flame, Briefcase } from 'lucide-react'
 import { useJobs } from '../hooks/useJobs'
 import { useApplications } from '../hooks/useApplications'
 import { useAuth } from '../hooks/useAuth'
@@ -8,18 +8,42 @@ import { useToast } from '../components/Toast'
 import { COMPANY_TYPES } from '../lib/constants'
 import { normalizeCity, getUniqueCities } from '../lib/cityNormalize'
 
-type QuickTag = '全部' | '24h最新' | '笔试真题'
+const QUICK_TAGS = [
+  { key: '全部', icon: null, label: '全部' },
+  { key: '24h最新', icon: Clock, label: '24h最新' },
+  { key: '26届热门春招', icon: Flame, label: '26届热门春招' },
+  { key: '国企央企', icon: Building2, label: '国企央企汇总' },
+  { key: '大厂实习', icon: Briefcase, label: '大厂实习汇总' },
+] as const
+
+type QuickTag = (typeof QUICK_TAGS)[number]['key']
 
 export default function Jobs() {
-  const { jobs, loading, loadingMore, hasMore, loadMore, totalCount, todayCount } = useJobs()
+  const navigate = useNavigate()
   const { applications, importJob } = useApplications()
   const { user } = useAuth()
   const { toast } = useToast()
-  const navigate = useNavigate()
   const [search, setSearch] = useState('')
+  const [searchInput, setSearchInput] = useState('')
   const [cityFilter, setCityFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('全部')
   const [quickTag, setQuickTag] = useState<QuickTag>('全部')
+
+  // Server-side filtered query
+  const { jobs, loading, loadingMore, hasMore, loadMore, totalCount, todayCount, filteredCount } = useJobs({
+    quickTag,
+    search,
+    companyType: typeFilter,
+  })
+
+  // City filter is still client-side (applied on loaded results)
+  const filtered = useMemo(() => {
+    if (!cityFilter) return jobs
+    return jobs.filter((job) => {
+      const norm = normalizeCity(job.city)
+      return norm === cityFilter
+    })
+  }, [jobs, cityFilter])
 
   // Normalized unique cities for dropdown
   const cities = useMemo(
@@ -32,35 +56,6 @@ export default function Jobs() {
     () => new Set(applications.map((a) => a.job_id).filter(Boolean)),
     [applications]
   )
-
-  // Filter jobs (city filter uses normalized comparison)
-  const filtered = useMemo(() => {
-    const now = Date.now()
-    const h24 = 24 * 60 * 60 * 1000
-    return jobs.filter((job) => {
-      if (search) {
-        const q = search.toLowerCase()
-        if (
-          !job.title.toLowerCase().includes(q) &&
-          !job.company.toLowerCase().includes(q)
-        )
-          return false
-      }
-      if (cityFilter) {
-        const norm = normalizeCity(job.city)
-        if (norm !== cityFilter) return false
-      }
-      if (typeFilter !== '全部') {
-        if (job.company_type !== typeFilter) return false
-      }
-      // Quick tag filter
-      if (quickTag === '24h最新') {
-        const updatedMs = new Date(job.updated_at).getTime()
-        if (now - updatedMs > h24) return false
-      }
-      return true
-    })
-  }, [jobs, search, cityFilter, typeFilter, quickTag])
 
   const handleImport = async (job: (typeof jobs)[0]) => {
     if (!user) {
@@ -77,6 +72,14 @@ export default function Jobs() {
     } else {
       toast('success', '导入成功')
     }
+  }
+
+  // Debounced search
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') setSearch(searchInput)
+  }
+  const handleSearchBlur = () => {
+    if (searchInput !== search) setSearch(searchInput)
   }
 
   return (
@@ -98,8 +101,10 @@ export default function Jobs() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                onBlur={handleSearchBlur}
                 placeholder="搜索公司或职位..."
                 className="pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-sm bg-white w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               />
@@ -130,10 +135,7 @@ export default function Jobs() {
 
         {/* Quick tags */}
         <div className="flex flex-wrap gap-2 mb-5">
-          {([
-            { key: '全部' as QuickTag, icon: null, label: '全部' },
-            { key: '24h最新' as QuickTag, icon: Clock, label: '24h最新' },
-          ]).map(({ key, icon: Icon, label }) => {
+          {QUICK_TAGS.map(({ key, icon: Icon, label }) => {
             const active = quickTag === key
             return (
               <button
@@ -158,6 +160,13 @@ export default function Jobs() {
             笔试真题汇总
           </button>
         </div>
+
+        {/* Active filter indicator */}
+        {quickTag !== '全部' && !loading && (
+          <p className="text-xs text-slate-500 mb-4">
+            筛选结果: <span className="font-medium text-slate-700">{filteredCount}</span> 个职位
+          </p>
+        )}
 
         {/* Grid */}
         {loading ? (

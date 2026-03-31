@@ -22,12 +22,14 @@ type QuickTag = (typeof QUICK_TAGS)[number]['key']
 
 export default function Jobs() {
   const navigate = useNavigate()
-  const { applications, importJob, isAtFreeLimit } = useApplications()
+  const { applications, importJob, deleteApplication, isAtFreeLimit } = useApplications()
   const { user } = useAuth()
   const { membership } = useSubscription()
   const { toast } = useToast()
   const [showPaywall, setShowPaywall] = useState(false)
   const [importingId, setImportingId] = useState<string | null>(null)
+  const [removingId, setRemovingId] = useState<string | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ jobId: string; appId: string; title: string } | null>(null)
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [cityFilter, setCityFilter] = useState('')
@@ -56,17 +58,34 @@ export default function Jobs() {
     [jobs]
   )
 
-  // Set of already-imported job IDs
-  const importedJobIds = useMemo(
-    () => new Set(applications.map((a) => a.job_id).filter(Boolean)),
+  // Map job_id → application id for toggle (import/remove)
+  const importedMap = useMemo(
+    () => {
+      const map = new Map<string, string>()
+      for (const a of applications) {
+        if (a.job_id) map.set(a.job_id, a.id)
+      }
+      return map
+    },
     [applications]
   )
 
-  const handleImport = async (job: (typeof jobs)[0]) => {
+  const handleToggle = (job: (typeof jobs)[0]) => {
     if (!user) {
       navigate(`/login?redirect=/jobs`)
       return
     }
+    const appId = importedMap.get(job.id)
+    if (appId) {
+      // Already imported → confirm remove
+      setDeleteConfirm({ jobId: job.id, appId, title: `${job.company} · ${job.title}` })
+    } else {
+      // Not imported → import
+      handleImport(job)
+    }
+  }
+
+  const handleImport = async (job: (typeof jobs)[0]) => {
     if (isAtFreeLimit && !membership.isMember) {
       setShowPaywall(true)
       return
@@ -85,6 +104,19 @@ export default function Jobs() {
     } else {
       trackSuccess('import')
       toast('success', '搞定！已加入申请池')
+    }
+  }
+
+  const handleConfirmRemove = async () => {
+    if (!deleteConfirm) return
+    setRemovingId(deleteConfirm.jobId)
+    const { error } = await deleteApplication(deleteConfirm.appId)
+    setRemovingId(null)
+    setDeleteConfirm(null)
+    if (error) {
+      toast('error', '移除失败，请重试')
+    } else {
+      toast('success', '已移除')
     }
   }
 
@@ -188,7 +220,7 @@ export default function Jobs() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filtered.map((job) => {
-                const imported = importedJobIds.has(job.id)
+                const imported = importedMap.has(job.id)
                 return (
                   <div
                     key={job.id}
@@ -242,25 +274,25 @@ export default function Jobs() {
                         </a>
                       )}
                       <button
-                        onClick={() => handleImport(job)}
-                        disabled={imported || importingId === job.id}
+                        onClick={() => handleToggle(job)}
+                        disabled={importingId === job.id || removingId === job.id}
                         className={`ml-auto flex items-center gap-1 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
                           imported
-                            ? 'bg-tag-bg text-ink-muted/70 cursor-not-allowed'
+                            ? 'bg-ok-soft text-ok hover:bg-emerald-100'
                             : importingId === job.id
                               ? 'bg-brand-hover text-white cursor-wait'
                               : 'bg-brand text-white hover:bg-brand-hover'
                         }`}
                       >
-                        {imported ? (
-                          <>
-                            <Check className="w-3.5 h-3.5" />
-                            已导入
-                          </>
-                        ) : importingId === job.id ? (
+                        {importingId === job.id ? (
                           <>
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
                             收藏中...
+                          </>
+                        ) : imported ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" />
+                            已导入
                           </>
                         ) : (
                           <>
@@ -304,6 +336,31 @@ export default function Jobs() {
       </div>
 
       {showPaywall && <PaywallModal onClose={() => setShowPaywall(false)} />}
+
+      {/* Remove confirm dialog */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setDeleteConfirm(null)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-xs p-5" onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm text-ink mb-2">确定要移除这个岗位吗？</p>
+            <p className="text-xs text-ink-muted mb-4 line-clamp-1">{deleteConfirm.title}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 py-2 rounded-xl text-sm border border-line text-ink-muted hover:bg-tag-bg transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleConfirmRemove}
+                className="flex-1 py-2 rounded-xl text-sm bg-red-500 text-white hover:bg-red-600 transition-colors"
+              >
+                确认移除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -75,17 +75,17 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold text-ink">进度概览</h1>
         <p className="text-sm text-ink-muted mt-1 mb-6">快速了解你的春招申请状态</p>
 
-        {/* Stats grid — 2 cols mobile, 4 cols desktop, 8 cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        {/* Stats grid — 2 cols mobile (compact), 4 cols desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-6">
           {statCards.map((card) => (
-            <div key={card.label} className="bg-white rounded-2xl border border-line-light shadow-sm p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-ink-muted">{card.label}</span>
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${card.color}`}>
-                  <card.icon className="w-4 h-4" />
+            <div key={card.label} className="bg-white rounded-xl md:rounded-2xl border border-line-light shadow-sm p-2.5 md:p-4">
+              <div className="flex items-center justify-between mb-1 md:mb-2">
+                <span className="text-[11px] md:text-xs text-ink-muted">{card.label}</span>
+                <div className={`w-6 h-6 md:w-8 md:h-8 rounded-md md:rounded-lg flex items-center justify-center ${card.color}`}>
+                  <card.icon className="w-3 h-3 md:w-4 md:h-4" />
                 </div>
               </div>
-              <p className="text-2xl font-bold text-ink">
+              <p className="text-lg md:text-2xl font-bold text-ink">
                 {card.status === null ? applications.length : (statusCounts[card.status] || 0)}
               </p>
             </div>

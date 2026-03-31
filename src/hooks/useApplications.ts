@@ -97,8 +97,17 @@ export function useApplications() {
         (payload) => {
           const newRow = payload.new as Application
           setApplications((prev) => {
-            // Skip if already added optimistically
+            // Skip if already exists with same real ID
             if (prev.some((a) => a.id === newRow.id)) return prev
+            // Replace optimistic record (matched by job_id) with real one
+            const hasOptimistic = prev.some((a) => a.job_id === newRow.job_id && a.id !== newRow.id && a.imported_at === a.updated_at)
+            if (hasOptimistic) {
+              const updated = prev.map((a) =>
+                a.job_id === newRow.job_id && a.id !== newRow.id && a.imported_at === a.updated_at ? newRow : a
+              )
+              setCache(CACHE_KEY, updated)
+              return updated
+            }
             const updated = [newRow, ...prev]
             setCache(CACHE_KEY, updated)
             return updated
@@ -164,7 +173,11 @@ export function useApplications() {
   }) => {
     if (!user) return { error: { message: '请先登录' } }
 
-    const { data, error } = await supabase.from('user_applications').insert({
+    // Optimistic: add to local state immediately so button changes to "已导入"
+    const optimisticId = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const optimisticApp: Application = {
+      id: optimisticId,
       user_id: user.id,
       job_id: job.id,
       title: job.title,
@@ -173,14 +186,35 @@ export function useApplications() {
       deadline: job.deadline,
       jd_url: job.jd_url,
       status: 'pending_review',
-    }).select().single()
+      notes: null,
+      reminder_date: null,
+      reminder_note: null,
+      imported_at: now,
+      updated_at: now,
+    }
+    setApplications((prev) => {
+      const updated = [optimisticApp, ...prev]
+      setCache(CACHE_KEY, updated)
+      return updated
+    })
 
-    if (!error && data) {
-      // Optimistic: update local state immediately so UI reflects the change
+    const { error } = await supabase.from('user_applications').insert({
+      user_id: user.id,
+      job_id: job.id,
+      title: job.title,
+      company: job.company,
+      city: job.city,
+      deadline: job.deadline,
+      jd_url: job.jd_url,
+      status: 'pending_review',
+    })
+
+    if (error) {
+      // Rollback optimistic update
       setApplications((prev) => {
-        const updated = [data as Application, ...prev]
-        setCache(CACHE_KEY, updated)
-        return updated
+        const reverted = prev.filter((a) => a.id !== optimisticId)
+        setCache(CACHE_KEY, reverted)
+        return reverted
       })
     }
     return { error }
@@ -236,7 +270,31 @@ export function useApplications() {
   }) => {
     if (!user) return { error: { message: '请先登录' } }
 
-    const { data, error } = await supabase.from('user_applications').insert({
+    const optimisticId = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const optimisticApp: Application = {
+      id: optimisticId,
+      user_id: user.id,
+      job_id: null,
+      title: fields.title,
+      company: fields.company,
+      city: fields.city || null,
+      deadline: fields.deadline || null,
+      jd_url: fields.jd_url || null,
+      status: 'pending_review',
+      notes: null,
+      reminder_date: null,
+      reminder_note: null,
+      imported_at: now,
+      updated_at: now,
+    }
+    setApplications((prev) => {
+      const updated = [optimisticApp, ...prev]
+      setCache(CACHE_KEY, updated)
+      return updated
+    })
+
+    const { error } = await supabase.from('user_applications').insert({
       user_id: user.id,
       job_id: null,
       title: fields.title,
@@ -246,13 +304,13 @@ export function useApplications() {
       jd_url: fields.jd_url || null,
       status: 'pending_review',
       source: 'manual',
-    }).select().single()
+    })
 
-    if (!error && data) {
+    if (error) {
       setApplications((prev) => {
-        const updated = [data as Application, ...prev]
-        setCache(CACHE_KEY, updated)
-        return updated
+        const reverted = prev.filter((a) => a.id !== optimisticId)
+        setCache(CACHE_KEY, reverted)
+        return reverted
       })
     }
     return { error }

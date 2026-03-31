@@ -7,17 +7,18 @@ import {
 import { useDroppable } from '@dnd-kit/core'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
-import { MapPin, Search } from 'lucide-react'
+import { MapPin, Search, Plus, X, Loader2 } from 'lucide-react'
 import { useApplications, type Application } from '../hooks/useApplications'
 import { STATUS_MAP, STATUS_LIST, STATUS_COLORS } from '../lib/constants'
 import type { ApplicationStatus } from '../lib/constants'
 import { useToast } from '../components/Toast'
 
 export default function Board() {
-  const { applications, loading, updateStatus } = useApplications()
+  const { applications, loading, updateStatus, manualAdd } = useApplications()
   const { toast } = useToast()
   const [search, setSearch] = useState('')
   const [mobileTab, setMobileTab] = useState<ApplicationStatus>('pending_review')
+  const [showAddModal, setShowAddModal] = useState(false)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
@@ -61,15 +62,24 @@ export default function Board() {
             <h1 className="text-2xl font-bold text-slate-800">申请看板</h1>
             <p className="text-sm text-slate-500 mt-1">拖拽卡片更新进度，左右滑动查看更多</p>
           </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="搜索公司或职位..."
-              className="pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-sm bg-white w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="搜索公司或职位..."
+                className="pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-sm bg-white w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              手动添加
+            </button>
           </div>
         </div>
 
@@ -114,6 +124,22 @@ export default function Board() {
           </div>
         </div>
       </div>
+
+      {/* Add modal */}
+      {showAddModal && (
+        <ManualAddModal
+          onClose={() => setShowAddModal(false)}
+          onSubmit={async (fields) => {
+            const { error } = await manualAdd(fields)
+            if (error) {
+              toast('error', error.message || '添加失败')
+              return false
+            }
+            toast('success', '添加成功')
+            return true
+          }}
+        />
+      )}
 
       {/* Thin scrollbar styles */}
       <style>{`
@@ -226,6 +252,141 @@ function MobileCard({ app }: { app: Application }) {
         )}
       </div>
     </Link>
+  )
+}
+
+function ManualAddModal({
+  onClose,
+  onSubmit,
+}: {
+  onClose: () => void
+  onSubmit: (fields: { title: string; company: string; city?: string; deadline?: string; jd_url?: string }) => Promise<boolean>
+}) {
+  const [title, setTitle] = useState('')
+  const [company, setCompany] = useState('')
+  const [city, setCity] = useState('')
+  const [deadline, setDeadline] = useState('')
+  const [jdUrl, setJdUrl] = useState('')
+  const [urlError, setUrlError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const validateUrl = (val: string) => {
+    if (!val) { setUrlError(''); return true }
+    try {
+      new URL(val)
+      setUrlError('')
+      return true
+    } catch {
+      setUrlError('请输入有效的 URL（以 http:// 或 https:// 开头）')
+      return false
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!title.trim() || !company.trim()) return
+    if (!validateUrl(jdUrl)) return
+
+    setSubmitting(true)
+    const ok = await onSubmit({
+      title: title.trim(),
+      company: company.trim(),
+      city: city.trim() || undefined,
+      deadline: deadline.trim() || undefined,
+      jd_url: jdUrl.trim() || undefined,
+    })
+    setSubmitting(false)
+    if (ok) onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40" />
+      <div
+        className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-bold text-slate-800">手动添加职位</h2>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">职位名称 *</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="如：前端开发工程师"
+              required
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">公司 *</label>
+            <input
+              type="text"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              placeholder="如：腾讯"
+              required
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">城市</label>
+              <input
+                type="text"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="如：深圳"
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">截止日期</label>
+              <input
+                type="text"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                placeholder="如：2026.04.30"
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">JD 链接</label>
+            <input
+              type="text"
+              value={jdUrl}
+              onChange={(e) => { setJdUrl(e.target.value); if (urlError) validateUrl(e.target.value) }}
+              onBlur={() => validateUrl(jdUrl)}
+              placeholder="https://..."
+              className={`w-full px-3 py-2.5 rounded-xl border text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+                urlError ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'
+              }`}
+            />
+            {urlError && <p className="text-xs text-red-500 mt-1">{urlError}</p>}
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting || !title.trim() || !company.trim()}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            {submitting ? '添加中...' : '添加到看板'}
+          </button>
+        </form>
+      </div>
+    </div>
   )
 }
 

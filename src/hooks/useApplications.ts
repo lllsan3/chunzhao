@@ -207,10 +207,39 @@ export function useApplications() {
     return { error }
   }
 
+  const manualAdd = async (fields: {
+    title: string
+    company: string
+    city?: string
+    deadline?: string
+    jd_url?: string
+  }) => {
+    const { data: userData } = await supabase.auth.getUser()
+    if (!userData.user) return { error: { message: '请先登录' } }
+
+    const { error } = await supabase.from('user_applications').insert({
+      user_id: userData.user.id,
+      job_id: null,
+      title: fields.title,
+      company: fields.company,
+      city: fields.city || null,
+      deadline: fields.deadline || null,
+      jd_url: fields.jd_url || null,
+      status: 'pending_review',
+      source: 'manual',
+    })
+
+    if (!error) {
+      invalidateCache(CACHE_KEY)
+    }
+    return { error }
+  }
+
   return {
     applications,
     loading,
     importJob,
+    manualAdd,
     updateStatus,
     updateNotes,
     updateReminder,

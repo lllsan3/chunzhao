@@ -247,6 +247,19 @@ export function useApplications() {
     return { error }
   }
 
+  const deleteApplication = async (id: string) => {
+    const { error } = await supabase
+      .from('user_applications')
+      .delete()
+      .eq('id', id)
+
+    if (!error) {
+      // Realtime will handle state update, but invalidate cache
+      invalidateCache(CACHE_KEY)
+    }
+    return { error }
+  }
+
   return {
     applications,
     loading,
@@ -256,6 +269,7 @@ export function useApplications() {
     updateStatus,
     updateNotes,
     updateReminder,
+    deleteApplication,
     refetch: fetchApplications,
   }
 }

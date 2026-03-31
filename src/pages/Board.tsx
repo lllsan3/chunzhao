@@ -7,7 +7,7 @@ import {
 import { useDroppable } from '@dnd-kit/core'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
-import { MapPin, Search, Plus, X, Loader2, LogIn } from 'lucide-react'
+import { MapPin, Search, Plus, X, Loader2, LogIn, Trash2 } from 'lucide-react'
 import { trackFailure, trackSuccess } from '../lib/errorTracker'
 import { useApplications, type Application } from '../hooks/useApplications'
 import { useAuth } from '../hooks/useAuth'
@@ -18,7 +18,7 @@ import { useToast } from '../components/Toast'
 import { PaywallModal } from '../components/PaywallModal'
 
 export default function Board() {
-  const { applications, loading, updateStatus, manualAdd, isAtFreeLimit } = useApplications()
+  const { applications, loading, updateStatus, manualAdd, deleteApplication, isAtFreeLimit } = useApplications()
   const { user } = useAuth()
   const { membership } = useSubscription()
   const { toast } = useToast()
@@ -26,6 +26,7 @@ export default function Board() {
   const [mobileTab, setMobileTab] = useState<ApplicationStatus>('pending_review')
   const [showAddModal, setShowAddModal] = useState(false)
   const [showPaywall, setShowPaywall] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; title: string } | null>(null)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
@@ -133,7 +134,7 @@ export default function Board() {
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <div className="flex gap-2 overflow-x-auto pb-2 board-scroll items-start">
               {STATUS_LIST.map((status) => (
-                <KanbanColumn key={status} status={status} items={grouped[status]} />
+                <KanbanColumn key={status} status={status} items={grouped[status]} onDelete={(app) => setDeleteConfirm({ id: app.id, title: `${app.company} · ${app.title}` })} />
               ))}
             </div>
           </DndContext>
@@ -192,7 +193,7 @@ export default function Board() {
               <div className="text-center py-12 text-ink-muted/70 text-sm">暂无岗位</div>
             ) : (
               grouped[mobileTab].map((app) => (
-                <MobileCard key={app.id} app={app} />
+                <MobileCard key={app.id} app={app} onDelete={() => setDeleteConfirm({ id: app.id, title: `${app.company} · ${app.title}` })} />
               ))
             )}
           </div>
@@ -200,6 +201,39 @@ export default function Board() {
       </div>
 
       {showPaywall && <PaywallModal onClose={() => setShowPaywall(false)} />}
+
+      {/* Delete confirm dialog */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setDeleteConfirm(null)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-xs p-5" onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm text-ink mb-4">确定要移除这个岗位吗？</p>
+            <p className="text-xs text-ink-muted mb-4 line-clamp-1">{deleteConfirm.title}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 py-2 rounded-xl text-sm border border-line text-ink-muted hover:bg-tag-bg transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={async () => {
+                  const { error } = await deleteApplication(deleteConfirm.id)
+                  if (error) {
+                    toast('error', '删除失败，请重试')
+                  } else {
+                    toast('success', '已移除')
+                  }
+                  setDeleteConfirm(null)
+                }}
+                className="flex-1 py-2 rounded-xl text-sm bg-red-500 text-white hover:bg-red-600 transition-colors"
+              >
+                确认移除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add modal */}
       {showAddModal && (
@@ -234,7 +268,7 @@ export default function Board() {
   )
 }
 
-function KanbanColumn({ status, items }: { status: ApplicationStatus; items: Application[] }) {
+function KanbanColumn({ status, items, onDelete }: { status: ApplicationStatus; items: Application[]; onDelete: (app: Application) => void }) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
   const colors = STATUS_COLORS[status]
 
@@ -258,14 +292,14 @@ function KanbanColumn({ status, items }: { status: ApplicationStatus; items: App
         {items.length === 0 ? (
           <p className="text-[11px] text-line text-center py-6">暂无岗位</p>
         ) : (
-          items.map((app) => <DraggableCard key={app.id} app={app} />)
+          items.map((app) => <DraggableCard key={app.id} app={app} onDelete={() => onDelete(app)} />)
         )}
       </div>
     </div>
   )
 }
 
-function DraggableCard({ app }: { app: Application }) {
+function DraggableCard({ app, onDelete }: { app: Application; onDelete: () => void }) {
   const navigate = useNavigate()
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: app.id })
   const didDrag = useRef(false)
@@ -294,9 +328,16 @@ function DraggableCard({ app }: { app: Application }) {
       {...listeners}
       {...attributes}
       onClick={handleClick}
-      className="bg-white rounded-lg border border-line-light/80 shadow-[0_1px_2px_rgba(0,0,0,0.04)] px-2.5 py-2 hover:shadow-sm transition-shadow cursor-grab active:cursor-grabbing"
+      className="group relative bg-white rounded-lg border border-line-light/80 shadow-[0_1px_2px_rgba(0,0,0,0.04)] px-2.5 py-2 hover:shadow-sm transition-shadow cursor-grab active:cursor-grabbing"
     >
-      <p className="font-medium text-[13px] text-ink line-clamp-1">{app.title}</p>
+      <button
+        onClick={(e) => { e.stopPropagation(); onDelete() }}
+        className="absolute top-1.5 right-1.5 w-5 h-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-50 text-ink-muted/70 hover:text-red-500 transition-all"
+        title="移除"
+      >
+        <Trash2 className="w-3 h-3" />
+      </button>
+      <p className="font-medium text-[13px] text-ink line-clamp-1 pr-4">{app.title}</p>
       <p className="text-[11px] text-ink-muted mt-0.5">{app.company}</p>
       <div className="flex items-center gap-2 mt-1 text-[11px] text-ink-muted/70">
         {app.city && (
@@ -313,26 +354,32 @@ function DraggableCard({ app }: { app: Application }) {
   )
 }
 
-function MobileCard({ app }: { app: Application }) {
+function MobileCard({ app, onDelete }: { app: Application; onDelete: () => void }) {
   return (
-    <Link
-      to={`/applications/${app.id}`}
-      className="block bg-white rounded-2xl border border-line-light shadow-sm p-4"
-    >
-      <p className="font-medium text-ink">{app.title}</p>
-      <p className="text-sm text-ink-muted mt-0.5">{app.company}</p>
-      <div className="flex items-center gap-3 mt-2 text-xs text-ink-muted/70">
-        {app.city && (
-          <span className="flex items-center gap-0.5">
-            <MapPin className="w-3 h-3" />
-            {app.city}
-          </span>
-        )}
-        {app.updated_at && (
-          <span className="ml-auto">{timeAgo(app.updated_at)}</span>
-        )}
-      </div>
-    </Link>
+    <div className="relative bg-white rounded-2xl border border-line-light shadow-sm p-4">
+      <Link to={`/applications/${app.id}`} className="block">
+        <p className="font-medium text-ink pr-6">{app.title}</p>
+        <p className="text-sm text-ink-muted mt-0.5">{app.company}</p>
+        <div className="flex items-center gap-3 mt-2 text-xs text-ink-muted/70">
+          {app.city && (
+            <span className="flex items-center gap-0.5">
+              <MapPin className="w-3 h-3" />
+              {app.city}
+            </span>
+          )}
+          {app.updated_at && (
+            <span className="ml-auto">{timeAgo(app.updated_at)}</span>
+          )}
+        </div>
+      </Link>
+      <button
+        onClick={onDelete}
+        className="absolute top-3 right-3 w-7 h-7 rounded-lg flex items-center justify-center text-ink-muted/70 hover:bg-red-50 hover:text-red-500 transition-colors"
+        title="移除"
+      >
+        <Trash2 className="w-3.5 h-3.5" />
+      </button>
+    </div>
   )
 }
 

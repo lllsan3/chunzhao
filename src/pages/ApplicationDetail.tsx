@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, MapPin, Calendar, ExternalLink, Lightbulb, Copy,
-  AlertTriangle, CheckCircle, Clock
+  AlertTriangle, CheckCircle, Clock, Trash2
 } from 'lucide-react'
 import { trackFailure, trackSuccess } from '../lib/errorTracker'
 import { supabase } from '../lib/supabase'
@@ -46,8 +46,10 @@ export default function ApplicationDetail() {
   const [loading, setLoading] = useState(true)
   const [notes, setNotes] = useState('')
   const [reminderDate, setReminderDate] = useState('')
-  const { updateStatus, updateNotes, updateReminder } = useApplications()
+  const navigate = useNavigate()
+  const { updateStatus, updateNotes, updateReminder, deleteApplication } = useApplications()
   const { toast } = useToast()
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -248,9 +250,51 @@ export default function ApplicationDetail() {
               <p>导入时间: {new Date(app.imported_at).toLocaleString('zh-CN')}</p>
               <p>最后更新: {new Date(app.updated_at).toLocaleString('zh-CN')}</p>
             </div>
+
+            {/* Delete */}
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs text-ink-muted/70 hover:text-red-500 hover:bg-red-50 transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              移除此岗位
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Delete confirm */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-xs p-5" onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm text-ink mb-4">确定要移除这个岗位吗？</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-2 rounded-xl text-sm border border-line text-ink-muted hover:bg-tag-bg transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={async () => {
+                  const { error } = await deleteApplication(app.id)
+                  setShowDeleteConfirm(false)
+                  if (error) {
+                    toast('error', '删除失败，请重试')
+                  } else {
+                    toast('success', '已移除')
+                    navigate('/board')
+                  }
+                }}
+                className="flex-1 py-2 rounded-xl text-sm bg-red-500 text-white hover:bg-red-600 transition-colors"
+              >
+                确认移除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

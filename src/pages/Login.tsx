@@ -66,19 +66,19 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-page flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-          <h1 className="text-xl font-bold text-slate-800 text-center mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-line-light p-6">
+          <h1 className="text-xl font-bold text-ink text-center mb-6">
             {isSignUp ? '创建账号' : '登录春招助手'}
           </h1>
 
           {/* Tabs */}
-          <div className="flex bg-slate-100 rounded-lg p-0.5 mb-6">
+          <div className="flex bg-tag-bg rounded-lg p-0.5 mb-6">
             <button
               onClick={() => { setIsSignUp(false); setError('') }}
               className={`flex-1 py-2 text-sm rounded-md transition-colors ${
-                !isSignUp ? 'bg-white shadow-sm text-slate-900 font-medium' : 'text-slate-500'
+                !isSignUp ? 'bg-white shadow-sm text-ink font-medium' : 'text-ink-muted'
               }`}
             >
               登录
@@ -86,7 +86,7 @@ export default function Login() {
             <button
               onClick={() => { setIsSignUp(true); setError('') }}
               className={`flex-1 py-2 text-sm rounded-md transition-colors ${
-                isSignUp ? 'bg-white shadow-sm text-slate-900 font-medium' : 'text-slate-500'
+                isSignUp ? 'bg-white shadow-sm text-ink font-medium' : 'text-ink-muted'
               }`}
             >
               注册
@@ -95,25 +95,25 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm text-slate-600 mb-1">邮箱</label>
+              <label className="block text-sm text-ink-muted mb-1">邮箱</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full px-3 py-2.5 rounded-lg border border-line text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                 placeholder="your@email.com"
               />
             </div>
             <div>
-              <label className="block text-sm text-slate-600 mb-1">密码</label>
+              <label className="block text-sm text-ink-muted mb-1">密码</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full px-3 py-2.5 rounded-lg border border-line text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                 placeholder="至少 6 位"
               />
             </div>
@@ -125,7 +125,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-slate-900 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50 transition-colors"
+              className="w-full bg-brand text-white py-2.5 rounded-lg text-sm font-medium hover:bg-brand-hover disabled:opacity-50 transition-colors"
             >
               {loading ? '处理中...' : isSignUp ? '注册' : '登录'}
             </button>

@@ -16,7 +16,7 @@ const Exam = lazy(() => import('./pages/Exam'))
 function PageLoader() {
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
-      <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
     </div>
   )
 }
@@ -25,9 +25,9 @@ function NotFound() {
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
       <div className="text-center">
-        <p className="text-6xl font-bold text-slate-200 mb-2">404</p>
-        <p className="text-slate-500 mb-6">页面不存在</p>
-        <Link to="/" className="inline-flex items-center px-5 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800">
+        <p className="text-6xl font-bold text-line mb-2">404</p>
+        <p className="text-ink-muted mb-6">页面不存在</p>
+        <Link to="/" className="inline-flex items-center px-5 py-2.5 rounded-xl bg-brand text-white text-sm font-medium hover:bg-brand-hover">
           返回首页
         </Link>
       </div>
@@ -39,7 +39,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
-        <div className="min-h-screen bg-[#F7F8FA]">
+        <div className="min-h-screen bg-page">
           <Navbar />
           <Suspense fallback={<PageLoader />}>
             <Routes>

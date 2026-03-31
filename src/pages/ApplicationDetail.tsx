@@ -107,15 +107,15 @@ export default function ApplicationDetail() {
     toast('success', '已复制到剪贴板')
   }
 
-  if (loading) return <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center text-slate-400">加载中...</div>
-  if (!app) return <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center text-slate-400">未找到该申请</div>
+  if (loading) return <div className="min-h-screen bg-page flex items-center justify-center text-ink-muted/70">加载中...</div>
+  if (!app) return <div className="min-h-screen bg-page flex items-center justify-center text-ink-muted/70">未找到该申请</div>
 
   const job = app.job
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA]">
+    <div className="min-h-screen bg-page">
       <div className="max-w-4xl mx-auto px-4 py-6">
-        <Link to="/board" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-4">
+        <Link to="/board" className="inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink mb-4">
           <ArrowLeft className="w-4 h-4" />
           返回看板
         </Link>
@@ -124,23 +124,23 @@ export default function ApplicationDetail() {
           {/* Left main */}
           <div className="lg:col-span-2 space-y-4">
             {/* Header */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-              <h1 className="text-xl font-bold text-slate-800">{app.title}</h1>
-              <p className="text-slate-600 mt-1">{app.company}</p>
+            <div className="bg-white rounded-2xl border border-line-light shadow-sm p-6">
+              <h1 className="text-xl font-bold text-ink">{app.title}</h1>
+              <p className="text-ink-muted mt-1">{app.company}</p>
               <div className="flex flex-wrap gap-2 mt-3">
                 {app.city && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-50 text-slate-600 text-xs">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-tag-bg text-ink-muted text-xs">
                     <MapPin className="w-3.5 h-3.5" /> {app.city}
                   </span>
                 )}
                 {app.deadline && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-50 text-slate-600 text-xs">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-tag-bg text-ink-muted text-xs">
                     <Calendar className="w-3.5 h-3.5" /> 截止: {app.deadline}
                   </span>
                 )}
                 {app.jd_url && (
                   <a href={app.jd_url} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 text-xs hover:bg-blue-100">
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent-soft text-accent text-xs hover:bg-blue-100">
                     <ExternalLink className="w-3.5 h-3.5" /> 查看原JD
                   </a>
                 )}
@@ -149,9 +149,9 @@ export default function ApplicationDetail() {
 
             {/* Description from jobs */}
             {job?.description && (
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-                <h2 className="font-semibold text-slate-800 mb-3">职位描述</h2>
-                <div className="bg-slate-50 rounded-xl p-4 text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
+              <div className="bg-white rounded-2xl border border-line-light shadow-sm p-6">
+                <h2 className="font-semibold text-ink mb-3">职位描述</h2>
+                <div className="bg-tag-bg rounded-xl p-4 text-sm text-ink-muted leading-relaxed whitespace-pre-wrap">
                   {job.description}
                 </div>
               </div>
@@ -159,31 +159,31 @@ export default function ApplicationDetail() {
 
             {/* Resume tips */}
             {job?.resume_tips && (
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+              <div className="bg-white rounded-2xl border border-line-light shadow-sm p-6">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="flex items-center gap-2 font-semibold text-slate-800">
+                  <h2 className="flex items-center gap-2 font-semibold text-ink">
                     <Lightbulb className="w-4 h-4 text-amber-500" />
                     简历优化提词
                   </h2>
                   <button onClick={() => copyText(job.resume_tips!)}
-                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600">
+                    className="flex items-center gap-1 text-xs text-ink-muted/70 hover:text-ink-muted">
                     <Copy className="w-3.5 h-3.5" /> 复制
                   </button>
                 </div>
-                <div className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
+                <div className="text-sm text-ink-muted leading-relaxed whitespace-pre-wrap">
                   {job.resume_tips}
                 </div>
               </div>
             )}
 
             {/* Notes */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-              <h2 className="font-semibold text-slate-800 mb-3">进度跟进笔记</h2>
+            <div className="bg-white rounded-2xl border border-line-light shadow-sm p-6">
+              <h2 className="font-semibold text-ink mb-3">进度跟进笔记</h2>
               <textarea
                 value={notes}
                 onChange={(e) => handleNotesChange(e.target.value)}
                 placeholder="记录面试问题、笔试感受或下一步计划..."
-                className="w-full h-32 px-4 py-3 rounded-xl border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full h-32 px-4 py-3 rounded-xl border border-line text-sm resize-none focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
               />
             </div>
           </div>
@@ -191,13 +191,13 @@ export default function ApplicationDetail() {
           {/* Right sidebar */}
           <div className="space-y-4">
             {/* Status */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-              <h3 className="text-sm text-slate-500 mb-2">当前进度</h3>
+            <div className="bg-white rounded-2xl border border-line-light shadow-sm p-5">
+              <h3 className="text-sm text-ink-muted mb-2">当前进度</h3>
               <StatusBadge status={app.status} className="mb-3" />
               <select
                 value={app.status}
                 onChange={(e) => handleStatusChange(e.target.value as ApplicationStatus)}
-                className="w-full mt-2 px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full mt-2 px-3 py-2 rounded-lg border border-line text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
               >
                 {STATUS_LIST.map((s) => (
                   <option key={s} value={s}>{STATUS_MAP[s]}</option>
@@ -206,8 +206,8 @@ export default function ApplicationDetail() {
             </div>
 
             {/* Reminder */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
+            <div className="bg-white rounded-2xl border border-line-light shadow-sm p-5">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-ink mb-2">
                 <Clock className="w-4 h-4" />
                 提醒设置
               </h3>
@@ -216,9 +216,9 @@ export default function ApplicationDetail() {
                 value={reminderDate}
                 onChange={(e) => setReminderDate(e.target.value)}
                 onBlur={handleReminderSave}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full px-3 py-2 rounded-lg border border-line text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
-              <p className="text-xs text-slate-400 mt-2">设置后将在概览页提示跟进</p>
+              <p className="text-xs text-ink-muted/70 mt-2">设置后将在概览页提示跟进</p>
             </div>
 
             {/* Evaluation */}
@@ -228,7 +228,7 @@ export default function ApplicationDetail() {
                   <CheckCircle className="w-4 h-4" />
                   评估参考
                 </h3>
-                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{job.evaluation}</p>
+                <p className="text-sm text-ink-muted leading-relaxed whitespace-pre-wrap">{job.evaluation}</p>
               </div>
             )}
 
@@ -239,12 +239,12 @@ export default function ApplicationDetail() {
                   <AlertTriangle className="w-4 h-4" />
                   风险提示
                 </h3>
-                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{job.risk_notes}</p>
+                <p className="text-sm text-ink-muted leading-relaxed whitespace-pre-wrap">{job.risk_notes}</p>
               </div>
             )}
 
             {/* Timestamps */}
-            <div className="text-xs text-slate-400 space-y-1 px-1">
+            <div className="text-xs text-ink-muted/70 space-y-1 px-1">
               <p>导入时间: {new Date(app.imported_at).toLocaleString('zh-CN')}</p>
               <p>最后更新: {new Date(app.updated_at).toLocaleString('zh-CN')}</p>
             </div>

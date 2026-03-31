@@ -17,10 +17,10 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100">
+    <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-line-light">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 font-semibold text-slate-800">
+        <Link to="/" className="flex items-center gap-2 font-semibold text-ink">
           <Kanban className="w-5 h-5" />
           <span className="text-base">春招助手</span>
         </Link>
@@ -35,8 +35,8 @@ export function Navbar() {
                 to={item.to}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
                   active
-                    ? 'bg-slate-100 text-slate-900 font-medium'
-                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                    ? 'bg-tag-bg text-ink font-medium'
+                    : 'text-ink-muted hover:text-ink hover:bg-tag-bg'
                 }`}
               >
                 <item.icon className="w-4 h-4" />
@@ -51,7 +51,7 @@ export function Navbar() {
           {user ? (
             <button
               onClick={signOut}
-              className="hidden md:flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors"
+              className="hidden md:flex items-center gap-1 text-sm text-ink-muted hover:text-ink px-3 py-1.5 rounded-lg hover:bg-tag-bg transition-colors"
             >
               <LogOut className="w-4 h-4" />
               退出
@@ -59,14 +59,14 @@ export function Navbar() {
           ) : (
             <Link
               to="/login"
-              className="hidden md:flex items-center gap-1 text-sm bg-slate-900 text-white px-4 py-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+              className="hidden md:flex items-center gap-1 text-sm bg-brand text-white px-4 py-1.5 rounded-lg hover:bg-brand-hover transition-colors"
             >
               <LogIn className="w-4 h-4" />
               登录
             </Link>
           )}
           <button
-            className="md:hidden p-2 text-slate-500"
+            className="md:hidden p-2 text-ink-muted"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -76,7 +76,7 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-slate-100 bg-white px-4 pb-4">
+        <div className="md:hidden border-t border-line-light bg-white px-4 pb-4">
           {navItems.map((item) => {
             const active = pathname.startsWith(item.to)
             return (
@@ -85,7 +85,7 @@ export function Navbar() {
                 to={item.to}
                 onClick={() => setMobileOpen(false)}
                 className={`flex items-center gap-2 px-3 py-3 rounded-lg text-sm ${
-                  active ? 'bg-slate-100 text-slate-900 font-medium' : 'text-slate-600'
+                  active ? 'bg-tag-bg text-ink font-medium' : 'text-ink-muted'
                 }`}
               >
                 <item.icon className="w-4 h-4" />
@@ -93,11 +93,11 @@ export function Navbar() {
               </Link>
             )
           })}
-          <div className="border-t border-slate-100 mt-2 pt-2">
+          <div className="border-t border-line-light mt-2 pt-2">
             {user ? (
               <button
                 onClick={() => { signOut(); setMobileOpen(false) }}
-                className="flex items-center gap-2 px-3 py-3 text-sm text-slate-600 w-full"
+                className="flex items-center gap-2 px-3 py-3 text-sm text-ink-muted w-full"
               >
                 <LogOut className="w-4 h-4" />
                 退出登录
@@ -106,7 +106,7 @@ export function Navbar() {
               <Link
                 to="/login"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2 px-3 py-3 text-sm text-slate-600"
+                className="flex items-center gap-2 px-3 py-3 text-sm text-ink-muted"
               >
                 <LogIn className="w-4 h-4" />
                 登录 / 注册

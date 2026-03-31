@@ -95,22 +95,22 @@ export default function Jobs() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA]">
+    <div className="min-h-screen bg-page">
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">职位库</h1>
-            <p className="text-sm text-slate-500 mt-1">
-              共 <span className="font-medium text-slate-700">{totalCount}</span> 个职位
+            <h1 className="text-2xl font-bold text-ink">职位库</h1>
+            <p className="text-sm text-ink-muted mt-1">
+              共 <span className="font-medium text-ink">{totalCount}</span> 个职位
               {todayCount > 0 && (
-                <> · 今日更新 <span className="font-medium text-blue-600">{todayCount}</span> 个</>
+                <> · 今日更新 <span className="font-medium text-accent">{todayCount}</span> 个</>
               )}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted/70" />
               <input
                 type="text"
                 value={searchInput}
@@ -118,13 +118,13 @@ export default function Jobs() {
                 onKeyDown={handleSearchKeyDown}
                 onBlur={handleSearchBlur}
                 placeholder="搜索公司或职位..."
-                className="pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-sm bg-white w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="pl-9 pr-3 py-2 rounded-lg border border-line text-sm bg-white w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
               />
             </div>
             <select
               value={cityFilter}
               onChange={(e) => setCityFilter(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="px-3 py-2 rounded-lg border border-line text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
             >
               <option value="">所有城市</option>
               {cities.map((c) => (
@@ -134,7 +134,7 @@ export default function Jobs() {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="px-3 py-2 rounded-lg border border-line text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
             >
               {COMPANY_TYPES.map((t) => (
                 <option key={t} value={t}>
@@ -155,8 +155,8 @@ export default function Jobs() {
                 onClick={() => setQuickTag(key)}
                 className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                   active
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-300 hover:text-blue-600'
+                    ? 'bg-accent text-white'
+                    : 'bg-white text-ink-muted border border-line hover:border-accent/40 hover:text-accent'
                 }`}
               >
                 {Icon && <Icon className="w-3.5 h-3.5" />}
@@ -169,19 +169,19 @@ export default function Jobs() {
 
         {/* Active filter indicator */}
         {quickTag !== '全部' && !loading && (
-          <p className="text-xs text-slate-500 mb-4">
-            筛选结果: <span className="font-medium text-slate-700">{filteredCount}</span> 个职位
+          <p className="text-xs text-ink-muted mb-4">
+            筛选结果: <span className="font-medium text-ink">{filteredCount}</span> 个职位
           </p>
         )}
 
         {/* Grid */}
         {loading ? (
-          <div className="text-center py-20 text-slate-400">
+          <div className="text-center py-20 text-ink-muted/70">
             <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
             正在加载最新岗位...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-20 text-slate-400">暂无匹配职位</div>
+          <div className="text-center py-20 text-ink-muted/70">暂无匹配职位</div>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -190,12 +190,12 @@ export default function Jobs() {
                 return (
                   <div
                     key={job.id}
-                    className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex flex-col"
+                    className="bg-white rounded-2xl border border-line-light shadow-sm p-5 flex flex-col"
                   >
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <Link
                         to={`/jobs/${job.id}`}
-                        className="font-semibold text-slate-800 hover:text-blue-600 transition-colors line-clamp-1"
+                        className="font-semibold text-ink hover:text-accent transition-colors line-clamp-1"
                       >
                         {job.title}
                       </Link>
@@ -204,7 +204,7 @@ export default function Jobs() {
                           {job.tags.slice(0, 2).map((tag) => (
                             <span
                               key={tag}
-                              className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs"
+                              className="px-2 py-0.5 rounded-full bg-tag-bg text-ink-muted text-xs"
                             >
                               {tag}
                             </span>
@@ -212,8 +212,8 @@ export default function Jobs() {
                         </div>
                       )}
                     </div>
-                    <p className="text-sm text-slate-600 mb-3">{job.company}</p>
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mb-4">
+                    <p className="text-sm text-ink-muted mb-3">{job.company}</p>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-ink-muted mb-4">
                       {job.city && (
                         <span className="flex items-center gap-1">
                           <MapPin className="w-3.5 h-3.5" />
@@ -233,7 +233,7 @@ export default function Jobs() {
                           href={job.jd_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+                          className="flex items-center gap-1 text-xs text-accent hover:text-accent-hover"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                           查看原JD
@@ -244,10 +244,10 @@ export default function Jobs() {
                         disabled={imported || importingId === job.id}
                         className={`ml-auto flex items-center gap-1 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
                           imported
-                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                            ? 'bg-tag-bg text-ink-muted/70 cursor-not-allowed'
                             : importingId === job.id
-                              ? 'bg-slate-700 text-white cursor-wait'
-                              : 'bg-slate-900 text-white hover:bg-slate-800'
+                              ? 'bg-brand-hover text-white cursor-wait'
+                              : 'bg-brand text-white hover:bg-brand-hover'
                         }`}
                       >
                         {imported ? (
@@ -279,7 +279,7 @@ export default function Jobs() {
                 <button
                   onClick={loadMore}
                   disabled={loadingMore}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-line bg-white text-sm text-ink-muted hover:bg-tag-bg disabled:opacity-50 transition-colors"
                 >
                   {loadingMore ? (
                     <>
@@ -296,7 +296,7 @@ export default function Jobs() {
         )}
 
         {/* Footer */}
-        <p className="text-center text-xs text-slate-400 mt-6 pb-4">
+        <p className="text-center text-xs text-ink-muted/70 mt-6 pb-4">
           已加载 {filtered.length} 个职位{hasMore ? '，点击加载更多' : ''}
         </p>
       </div>

@@ -1,36 +1,19 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Kanban, Clock, CheckCircle, Users, AlertTriangle, FileText } from 'lucide-react'
+import { Kanban, Clock, Users, FileText, Send, PenLine, Award, XCircle } from 'lucide-react'
 import { useApplications } from '../hooks/useApplications'
 import { StatusBadge } from '../components/StatusBadge'
+import type { ApplicationStatus } from '../lib/constants'
 
 export default function Dashboard() {
   const { applications, loading } = useApplications()
 
-  const stats = useMemo(() => {
-    const now = new Date()
-    const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-
-    return {
-      total: applications.length,
-      toApply: applications.filter((a) => a.status === 'to_apply').length,
-      applied: applications.filter((a) => a.status === 'applied').length,
-      interview: applications.filter((a) => a.status === 'interview').length,
-      nearDeadline: applications.filter((a) => {
-        if (!a.deadline) return false
-        // Try to parse deadline as date
-        const d = parseDeadline(a.deadline)
-        return d && d >= now && d <= sevenDaysLater
-      }).length,
-      needFollowUp: applications.filter((a) => {
-        const updated = new Date(a.updated_at)
-        return (
-          updated < sevenDaysAgo &&
-          !['offer', 'rejected', 'abandoned'].includes(a.status)
-        )
-      }).length,
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const app of applications) {
+      counts[app.status] = (counts[app.status] || 0) + 1
     }
+    return counts
   }, [applications])
 
   const reminders = useMemo(() => {
@@ -52,13 +35,15 @@ export default function Dashboard() {
 
   if (loading) return <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center text-slate-400">加载中...</div>
 
-  const statCards = [
-    { label: '总导入职位', value: stats.total, icon: Kanban, color: 'text-blue-600 bg-blue-50' },
-    { label: '待投递', value: stats.toApply, icon: Clock, color: 'text-amber-600 bg-amber-50' },
-    { label: '已投递', value: stats.applied, icon: CheckCircle, color: 'text-emerald-600 bg-emerald-50' },
-    { label: '面试中', value: stats.interview, icon: Users, color: 'text-violet-600 bg-violet-50' },
-    { label: '临近截止', value: stats.nearDeadline, icon: AlertTriangle, color: 'text-red-600 bg-red-50' },
-    { label: '需要跟进', value: stats.needFollowUp, icon: FileText, color: 'text-amber-600 bg-amber-50' },
+  const statCards: { label: string; status: ApplicationStatus | null; icon: typeof Kanban; color: string }[] = [
+    { label: '总导入职位', status: null, icon: Kanban, color: 'text-blue-600 bg-blue-50' },
+    { label: '待评估', status: 'pending_review', icon: Clock, color: 'text-amber-600 bg-amber-50' },
+    { label: '待投递', status: 'to_apply', icon: FileText, color: 'text-sky-600 bg-sky-50' },
+    { label: '已投递', status: 'applied', icon: Send, color: 'text-emerald-600 bg-emerald-50' },
+    { label: '笔试', status: 'written_test', icon: PenLine, color: 'text-indigo-600 bg-indigo-50' },
+    { label: '面试', status: 'interview', icon: Users, color: 'text-violet-600 bg-violet-50' },
+    { label: '已发Offer', status: 'offer', icon: Award, color: 'text-emerald-600 bg-emerald-50' },
+    { label: '已拒绝', status: 'rejected', icon: XCircle, color: 'text-red-600 bg-red-50' },
   ]
 
   return (
@@ -67,8 +52,8 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold text-slate-800">进度概览</h1>
         <p className="text-sm text-slate-500 mt-1 mb-6">快速了解你的春招申请状态</p>
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+        {/* Stats grid — 2 cols mobile, 4 cols desktop, 8 cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           {statCards.map((card) => (
             <div key={card.label} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
               <div className="flex items-center justify-between mb-2">
@@ -77,7 +62,9 @@ export default function Dashboard() {
                   <card.icon className="w-4 h-4" />
                 </div>
               </div>
-              <p className="text-2xl font-bold text-slate-800">{card.value}</p>
+              <p className="text-2xl font-bold text-slate-800">
+                {card.status === null ? applications.length : (statusCounts[card.status] || 0)}
+              </p>
             </div>
           ))}
         </div>
@@ -155,11 +142,4 @@ export default function Dashboard() {
       </div>
     </div>
   )
-}
-
-function parseDeadline(deadline: string): Date | null {
-  // Try YYYY.MM.DD or YYYY-MM-DD
-  const match = deadline.match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/)
-  if (!match) return null
-  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
 }

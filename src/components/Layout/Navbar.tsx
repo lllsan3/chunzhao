@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Search, Kanban, BarChart3, CreditCard, FileText, Menu, X, LogIn, LogOut } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
+import { prefetchJobs } from '../../lib/prefetch'
 
 const navItems = [
   { to: '/jobs', icon: Search, label: '找职位' },
@@ -33,6 +34,7 @@ export function Navbar() {
               <Link
                 key={item.to}
                 to={item.to}
+                onMouseEnter={item.to === '/jobs' ? prefetchJobs : undefined}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
                   active
                     ? 'bg-tag-bg text-ink font-medium'

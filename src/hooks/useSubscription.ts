@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { getCached, setCache } from '../lib/queryCache'
 import { useAuth } from './useAuth'
 
 interface Membership {
@@ -8,29 +9,41 @@ interface Membership {
   expiresAt: string | null
 }
 
+const CACHE_KEY = 'membership'
+const DEFAULT: Membership = { isMember: false, planType: null, expiresAt: null }
+
 export function useSubscription() {
   const { user } = useAuth()
-  const [membership, setMembership] = useState<Membership>({
-    isMember: false,
-    planType: null,
-    expiresAt: null,
+  const [membership, setMembership] = useState<Membership>(() => {
+    const cached = getCached<Membership>(CACHE_KEY)
+    return cached?.data ?? DEFAULT
   })
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => !getCached<Membership>(CACHE_KEY))
 
   const checkMembership = useCallback(async () => {
     if (!user) {
-      setMembership({ isMember: false, planType: null, expiresAt: null })
+      setMembership(DEFAULT)
+      setLoading(false)
+      return
+    }
+
+    // If cache is fresh, skip network
+    const cached = getCached<Membership>(CACHE_KEY, 300_000) // 5 min stale time
+    if (cached?.fresh) {
+      setMembership(cached.data)
       setLoading(false)
       return
     }
 
     const { data, error } = await supabase.rpc('check_membership')
     if (!error && data) {
-      setMembership({
+      const m: Membership = {
         isMember: data.is_member ?? false,
         planType: data.plan_type ?? null,
         expiresAt: data.expires_at ?? null,
-      })
+      }
+      setMembership(m)
+      setCache(CACHE_KEY, m)
     }
     setLoading(false)
   }, [user])

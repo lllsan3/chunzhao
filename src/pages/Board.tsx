@@ -95,7 +95,7 @@ export default function Board() {
           <div>
             {/* Desktop: static title. Mobile: show current tab status + count */}
             <h1 className="text-2xl font-bold text-ink">
-              <span className="hidden md:inline">申请看板</span>
+              <span className="hidden md:inline">我的投递</span>
               <span className="md:hidden">{STATUS_MAP[mobileTab]}（{grouped[mobileTab].length}）</span>
             </h1>
             <p className="text-sm text-ink-muted mt-1 hidden md:block">拖拽卡片更新进度，左右滑动查看更多</p>

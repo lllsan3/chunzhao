@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/useAuth'
 
 const navItems = [
   { to: '/jobs', icon: Search, label: '找职位' },
-  { to: '/board', icon: Kanban, label: '申请看板' },
+  { to: '/board', icon: Kanban, label: '我的投递' },
   { to: '/dashboard', icon: BarChart3, label: '进度概览' },
   { to: '/pricing', icon: CreditCard, label: '升级计划' },
   { to: '/exam', icon: FileText, label: '笔试真题' },

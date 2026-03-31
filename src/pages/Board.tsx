@@ -23,7 +23,7 @@ export default function Board() {
   const { membership } = useSubscription()
   const { toast } = useToast()
   const [search, setSearch] = useState('')
-  const [mobileTab, setMobileTab] = useState<ApplicationStatus>('pending_review')
+  const [mobileTab, setMobileTab] = useState<ApplicationStatus | 'all'>('all')
   const [showAddModal, setShowAddModal] = useState(false)
   const [showPaywall, setShowPaywall] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; title: string } | null>(null)
@@ -97,7 +97,7 @@ export default function Board() {
             {/* Desktop: static title. Mobile: show current tab status + count */}
             <h1 className="text-2xl font-bold text-ink">
               <span className="hidden md:inline">我的投递</span>
-              <span className="md:hidden">{STATUS_MAP[mobileTab]}（{grouped[mobileTab].length}）</span>
+              <span className="md:hidden">{mobileTab === 'all' ? `全部（${filtered.length}）` : `${STATUS_MAP[mobileTab]}（${grouped[mobileTab].length}）`}</span>
             </h1>
             <p className="text-sm text-ink-muted mt-1 hidden md:block">拖拽卡片更新进度，左右滑动查看更多</p>
             <p className="text-sm text-ink-muted mt-1 md:hidden">切换状态查看不同阶段的申请</p>
@@ -169,6 +169,16 @@ export default function Board() {
 
           {/* Tab switcher */}
           <div className="flex gap-1.5 overflow-x-auto pb-3 mb-4">
+            <button
+              onClick={() => setMobileTab('all')}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                mobileTab === 'all'
+                  ? 'bg-accent text-white shadow-sm'
+                  : 'bg-tag-bg text-ink-muted/70 hover:text-ink-muted'
+              }`}
+            >
+              全部 ({filtered.length})
+            </button>
             {STATUS_LIST.map((status) => {
               const active = mobileTab === status
               const colors = STATUS_COLORS[status]
@@ -189,13 +199,16 @@ export default function Board() {
             })}
           </div>
           <div className="space-y-3">
-            {grouped[mobileTab].length === 0 ? (
-              <div className="text-center py-12 text-ink-muted/70 text-sm">暂无岗位</div>
-            ) : (
-              grouped[mobileTab].map((app) => (
-                <MobileCard key={app.id} app={app} onDelete={() => setDeleteConfirm({ id: app.id, title: `${app.company} · ${app.title}` })} />
-              ))
-            )}
+            {(() => {
+              const list = mobileTab === 'all' ? filtered : grouped[mobileTab]
+              return list.length === 0 ? (
+                <div className="text-center py-12 text-ink-muted/70 text-sm">暂无岗位</div>
+              ) : (
+                list.map((app) => (
+                  <MobileCard key={app.id} app={app} onDelete={() => setDeleteConfirm({ id: app.id, title: `${app.company} · ${app.title}` })} />
+                ))
+              )
+            })()}
           </div>
         </div>
       </div>

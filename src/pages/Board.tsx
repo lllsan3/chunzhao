@@ -93,8 +93,13 @@ export default function Board() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-5">
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">申请看板</h1>
-            <p className="text-sm text-slate-500 mt-1">拖拽卡片更新进度，左右滑动查看更多</p>
+            {/* Desktop: static title. Mobile: show current tab status + count */}
+            <h1 className="text-2xl font-bold text-slate-800">
+              <span className="hidden md:inline">申请看板</span>
+              <span className="md:hidden">{STATUS_MAP[mobileTab]}（{grouped[mobileTab].length}）</span>
+            </h1>
+            <p className="text-sm text-slate-500 mt-1 hidden md:block">拖拽卡片更新进度，左右滑动查看更多</p>
+            <p className="text-sm text-slate-500 mt-1 md:hidden">切换状态查看不同阶段的申请</p>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
@@ -134,21 +139,50 @@ export default function Board() {
           </DndContext>
         </div>
 
-        {/* Mobile: tab switcher */}
+        {/* Mobile: overview bar + tab switcher */}
         <div className="md:hidden">
-          <div className="flex gap-1 overflow-x-auto pb-3 mb-4">
+          {/* Status overview bar */}
+          <div className="flex flex-wrap gap-x-3 gap-y-1 px-1 py-2.5 mb-3 bg-white rounded-xl border border-slate-100">
+            {STATUS_LIST.map((status) => {
+              const count = grouped[status].length
+              const active = mobileTab === status
+              return (
+                <span
+                  key={status}
+                  className={`text-[11px] transition-colors ${
+                    active ? 'font-semibold text-slate-800' : 'text-slate-400'
+                  }`}
+                >
+                  {STATUS_MAP[status]}{' '}
+                  <span className={`inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full text-[10px] font-medium ${
+                    count > 0
+                      ? active ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
+                      : 'bg-slate-50 text-slate-300'
+                  }`}>
+                    {count}
+                  </span>
+                </span>
+              )
+            })}
+          </div>
+
+          {/* Tab switcher */}
+          <div className="flex gap-1.5 overflow-x-auto pb-3 mb-4">
             {STATUS_LIST.map((status) => {
               const active = mobileTab === status
               const colors = STATUS_COLORS[status]
+              const count = grouped[status].length
               return (
                 <button
                   key={status}
                   onClick={() => setMobileTab(status)}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    active ? `${colors.bg} ${colors.text}` : 'bg-white text-slate-500 border border-slate-200'
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    active
+                      ? `${colors.bg} ${colors.text} shadow-sm ring-1 ring-current/20`
+                      : 'bg-slate-50 text-slate-400 hover:text-slate-500'
                   }`}
                 >
-                  {STATUS_MAP[status]} {grouped[status].length > 0 && `(${grouped[status].length})`}
+                  {STATUS_MAP[status]} {count > 0 && `(${count})`}
                 </button>
               )
             })}

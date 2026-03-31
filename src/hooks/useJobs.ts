@@ -1,5 +1,13 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { getCached, setCache } from '../lib/queryCache'
+
+interface JobsPageCache {
+  jobs: Job[]
+  totalCount: number
+  todayCount: number
+  filteredCount: number
+}
 
 export interface Job {
   id: string
@@ -24,7 +32,7 @@ export interface Job {
 }
 
 export interface JobFilters {
-  quickTag?: string   // '全部' | '24h最新' | '国企央企' | '26届热门春招' | '大厂实习'
+  quickTag?: string
   search?: string
   city?: string
   companyType?: string
@@ -33,80 +41,70 @@ export interface JobFilters {
 const PAGE_SIZE = 36
 
 export function useJobs(filters?: JobFilters) {
-  const [jobs, setJobs] = useState<Job[]>([])
-  const [loading, setLoading] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
-  const [hasMore, setHasMore] = useState(true)
-  const [totalCount, setTotalCount] = useState(0)
-  const [todayCount, setTodayCount] = useState(0)
-  const [filteredCount, setFilteredCount] = useState(0)
-
-  // Serialize filters to detect changes
   const filtersKey = JSON.stringify(filters ?? {})
+  const cacheKey = `jobs:${filtersKey}`
   const prevFiltersKey = useRef(filtersKey)
 
-  // Build a Supabase query with server-side filters applied
-  const buildQuery = useCallback((selectStr: string, countMode?: 'exact') => {
-    let query = countMode
-      ? supabase.from('jobs').select(selectStr, { count: 'exact', head: true })
-      : supabase.from('jobs').select(selectStr)
-
-    const tag = filters?.quickTag ?? '全部'
-
-    // Server-side quick tag filters
-    if (tag === '最近更新') {
-      // No time filter — just sorted by updated_at desc, limited to 50 via PAGE_SIZE
-    } else if (tag === '国企央企') {
-      query = query.eq('company_type', '央国企')
-    } else if (tag === '26届热门春招') {
-      // (大厂 OR 央国企) AND target_graduates contains 2026
-      // We use tags contains '大厂' OR company_type = '央国企', combined with target containing 2026
-      // Supabase doesn't support OR across columns easily, so we use .or()
-      query = query.or('tags.cs.{"大厂"},company_type.eq.央国企')
-      query = query.ilike('target_graduates', '%2026%')
-    } else if (tag === '大厂实习') {
-      query = query.contains('tags', ['大厂'])
-      query = query.eq('recruitment_type', '实习')
-    }
-
-    // Search filter (server-side)
-    if (filters?.search) {
-      const q = `%${filters.search}%`
-      query = query.or(`title.ilike.${q},company.ilike.${q}`)
-    }
-
-    // Company type dropdown filter
-    if (filters?.companyType && filters.companyType !== '全部') {
-      query = query.eq('company_type', filters.companyType)
-    }
-
-    return query
-  }, [filters?.quickTag, filters?.search, filters?.companyType])
+  // Initialize from cache for instant render on route switch
+  const cached = getCached<JobsPageCache>(cacheKey)
+  const [jobs, setJobs] = useState<Job[]>(cached?.data.jobs ?? [])
+  const [loading, setLoading] = useState(!cached)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+  const [totalCount, setTotalCount] = useState(cached?.data.totalCount ?? 0)
+  const [todayCount, setTodayCount] = useState(cached?.data.todayCount ?? 0)
+  const [filteredCount, setFilteredCount] = useState(cached?.data.filteredCount ?? 0)
 
   const fetchPage = useCallback(async (offset: number, append: boolean) => {
+    // On initial load, if cache is fresh, skip network
+    if (!append) {
+      const c = getCached<JobsPageCache>(cacheKey)
+      if (c?.fresh) {
+        setJobs(c.data.jobs)
+        setTotalCount(c.data.totalCount)
+        setTodayCount(c.data.todayCount)
+        setFilteredCount(c.data.filteredCount)
+        setLoading(false)
+        return
+      }
+    }
+
     if (append) {
       setLoadingMore(true)
-    } else {
+    } else if (!getCached<JobsPageCache>(cacheKey)) {
       setLoading(true)
     }
 
-    const query = buildQuery('*')
-      .order('updated_at', { ascending: false })
-      .range(offset, offset + PAGE_SIZE - 1)
+    const tag = filters?.quickTag ?? '全部'
 
-    const { data, error } = await query
+    const { data, error } = await supabase.rpc('get_jobs_page', {
+      p_quick_tag: tag,
+      p_search: filters?.search ?? '',
+      p_company_type: filters?.companyType ?? '',
+      p_offset: offset,
+      p_limit: PAGE_SIZE,
+    })
 
     if (!error && data) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const rows = data as any as Job[]
+      const rows = (data.rows ?? []) as Job[]
+
       if (append) {
         setJobs((prev) => [...prev, ...rows])
       } else {
         setJobs(rows)
+        setTotalCount(data.total_count ?? 0)
+        setTodayCount(data.today_count ?? 0)
+        setFilteredCount(data.filtered_count ?? 0)
+        // Cache first page results
+        setCache(cacheKey, {
+          jobs: rows,
+          totalCount: data.total_count ?? 0,
+          todayCount: data.today_count ?? 0,
+          filteredCount: data.filtered_count ?? 0,
+        })
       }
-      // "最近更新" caps at 50 total
-      const tag = filters?.quickTag ?? '全部'
-      const totalLoaded = append ? jobs.length + rows.length : rows.length
+
+      const totalLoaded = append ? offset + rows.length : rows.length
       if (tag === '最近更新') {
         setHasMore(rows.length === PAGE_SIZE && totalLoaded < 50)
       } else {
@@ -116,35 +114,19 @@ export function useJobs(filters?: JobFilters) {
 
     setLoading(false)
     setLoadingMore(false)
-  }, [buildQuery, filters?.quickTag, jobs.length])
+  }, [filters?.quickTag, filters?.search, filters?.companyType, cacheKey])
 
-  // Fetch aggregate stats
-  const fetchStats = useCallback(async () => {
-    const { count } = await supabase
-      .from('jobs')
-      .select('*', { count: 'exact', head: true })
-    setTotalCount(count ?? 0)
-
-    const today = new Date().toISOString().slice(0, 10)
-    const { count: todayN } = await supabase
-      .from('jobs')
-      .select('*', { count: 'exact', head: true })
-      .gte('updated_at', today + 'T00:00:00')
-    setTodayCount(todayN ?? 0)
-
-    // Filtered count
-    const { count: fCount } = await buildQuery('*', 'exact')
-    setFilteredCount(fCount ?? 0)
-  }, [buildQuery])
-
-  // Re-fetch when filters change
   useEffect(() => {
+    const filtersChanged = prevFiltersKey.current !== filtersKey
     prevFiltersKey.current = filtersKey
-    setJobs([])
-    setHasMore(true)
+    if (filtersChanged) {
+      // Reset when filters change
+      const c = getCached<JobsPageCache>(cacheKey)
+      setJobs(c?.data.jobs ?? [])
+      setHasMore(true)
+    }
     fetchPage(0, false)
-    fetchStats()
-  }, [filtersKey, fetchPage, fetchStats])
+  }, [filtersKey, fetchPage, cacheKey])
 
   const loadMore = useCallback(() => {
     if (!loadingMore && hasMore) {

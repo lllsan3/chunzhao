@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { getCached, setCache, invalidateCache } from '../lib/queryCache'
 import type { ApplicationStatus } from '../lib/constants'
 
 export interface Application {
@@ -19,19 +20,41 @@ export interface Application {
   updated_at: string
 }
 
+const CACHE_KEY = 'applications'
+
 export function useApplications() {
-  const [applications, setApplications] = useState<Application[]>([])
-  const [loading, setLoading] = useState(true)
+  const [applications, setApplications] = useState<Application[]>(() => {
+    // Initialize from cache if available (instant render on route switch)
+    const cached = getCached<Application[]>(CACHE_KEY)
+    return cached?.data ?? []
+  })
+  const [loading, setLoading] = useState(() => {
+    const cached = getCached<Application[]>(CACHE_KEY)
+    return !cached // only show loading if no cache
+  })
 
   const fetchApplications = useCallback(async () => {
-    setLoading(true)
+    const cached = getCached<Application[]>(CACHE_KEY)
+
+    // If cache is fresh, skip network request entirely
+    if (cached?.fresh) {
+      setApplications(cached.data)
+      setLoading(false)
+      return
+    }
+
+    // If stale cache exists, we already rendered it — fetch silently in background
+    if (!cached) setLoading(true)
+
     const { data, error } = await supabase
       .from('user_applications')
       .select('*')
       .order('imported_at', { ascending: false })
 
     if (!error && data) {
-      setApplications(data as Application[])
+      const rows = data as Application[]
+      setApplications(rows)
+      setCache(CACHE_KEY, rows)
     }
     setLoading(false)
   }, [])
@@ -63,6 +86,7 @@ export function useApplications() {
     })
 
     if (!error) {
+      invalidateCache(CACHE_KEY)
       await fetchApplications()
     }
     return { error }
@@ -75,9 +99,11 @@ export function useApplications() {
       .eq('id', id)
 
     if (!error) {
-      setApplications((prev) =>
-        prev.map((app) => (app.id === id ? { ...app, status } : app))
+      const updated = applications.map((app) =>
+        app.id === id ? { ...app, status } : app
       )
+      setApplications(updated)
+      setCache(CACHE_KEY, updated)
     }
     return { error }
   }

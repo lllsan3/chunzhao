@@ -164,7 +164,7 @@ function RedeemModal({
         <div className="bg-tag-bg rounded-xl p-4 mb-5">
           <p className="text-sm font-medium text-ink mb-2">购买步骤：</p>
           <ol className="text-sm text-ink-muted space-y-1.5 list-decimal list-inside">
-            <li>在小红书搜索「春招助手」</li>
+            <li>在小红书搜索「校招助手」</li>
             <li>购买兑换码（¥9.9）</li>
             <li>回到本页输入兑换码</li>
           </ol>

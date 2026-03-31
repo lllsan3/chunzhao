@@ -47,7 +47,7 @@ export function PaywallModal({ onClose }: { onClose: () => void }) {
         </p>
 
         <div className="bg-tag-bg rounded-xl p-3 mb-4 text-xs text-ink-muted">
-          在小红书搜索「春招助手」购买兑换码（¥9.9）
+          在小红书搜索「校招助手」购买兑换码（¥9.9）
         </div>
 
         <div className="flex gap-2">

@@ -70,7 +70,7 @@ export default function Login() {
       <div className="w-full max-w-sm">
         <div className="bg-white rounded-2xl shadow-sm border border-line-light p-6">
           <h1 className="text-xl font-bold text-ink text-center mb-6">
-            {isSignUp ? '创建账号' : '登录春招助手'}
+            {isSignUp ? '创建账号' : '登录校招助手'}
           </h1>
 
           {/* Tabs */}

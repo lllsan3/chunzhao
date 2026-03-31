@@ -22,7 +22,7 @@ export function Navbar() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 font-semibold text-ink">
           <Kanban className="w-5 h-5" />
-          <span className="text-base">春招助手</span>
+          <span className="text-base">校招助手</span>
         </Link>
 
         {/* Desktop nav */}

@@ -16,7 +16,7 @@ export default function Home() {
           变成<span className="text-accent">清晰的行动流</span>
         </h1>
         <p className="mt-4 text-ink-muted text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-          不再用收藏夹和Excel管理求职。从发现机会到一键导入，再到进度追踪与提醒，春招助手帮你打造最高效的求职工作流。
+          不再用收藏夹和Excel管理求职。从发现机会到一键导入，再到进度追踪与提醒，校招助手帮你打造最高效的求职工作流。
         </p>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
@@ -62,7 +62,7 @@ export default function Home() {
           准备好掌控你的春招节奏了吗？
         </h2>
         <p className="mt-3 text-ink-muted/70 text-sm max-w-md mx-auto">
-          加入数千名正在使用春招助手的同学，用结构化的工作流代替混乱的收藏夹。
+          加入数千名正在使用校招助手的同学，用结构化的工作流代替混乱的收藏夹。
         </p>
         <Link
           to="/pricing"

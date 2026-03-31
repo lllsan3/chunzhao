@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useSEO } from '../hooks/useSEO'
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent,
@@ -19,6 +20,7 @@ import { useToast } from '../components/Toast'
 import { PaywallModal } from '../components/PaywallModal'
 
 export default function Board() {
+  useSEO({ title: '我的投递 - 校招助手', path: '/board' })
   const { applications, loading, updateStatus, manualAdd, deleteApplication, isAtFreeLimit } = useApplications()
   const { membership } = useSubscription()
   const { toast } = useToast()

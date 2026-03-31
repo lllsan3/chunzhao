@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Search, ExternalLink, FileText, Building2 } from 'lucide-react'
+import { useSEO } from '../hooks/useSEO'
 
 interface ExamResource {
   id: string
@@ -107,6 +108,7 @@ const EXAM_DATA: ExamResource[] = [
 const QUICK_COMPANIES = ['全部', '腾讯', '字节跳动', '华为', '阿里巴巴', '美团', '京东', '百度']
 
 export default function Exam() {
+  useSEO({ title: '笔试面试真题 - 校招助手', description: '大厂、国企、银行笔试面试真题资料汇总', path: '/exam' })
   const [search, setSearch] = useState('')
   const [companyFilter, setCompanyFilter] = useState('全部')
 

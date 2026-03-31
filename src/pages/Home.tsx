@@ -1,7 +1,14 @@
 import { Link } from 'react-router-dom'
 import { Kanban, Bell, ArrowRight, Import } from 'lucide-react'
+import { useSEO } from '../hooks/useSEO'
 
 export default function Home() {
+  useSEO({
+    title: '校招助手 - 26/27届春招秋招校招岗位管理工具',
+    description: '2万+校招岗位免费查，一键导入看板管理投递进度，不再漏投错投',
+    path: '/',
+  })
+
   return (
     <div className="min-h-screen bg-page">
       {/* Hero */}

@@ -1,11 +1,13 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Kanban, Clock, Users, FileText, Send, PenLine, Award, XCircle, Loader2 } from 'lucide-react'
+import { useSEO } from '../hooks/useSEO'
 import { useApplications } from '../hooks/useApplications'
 import { StatusBadge } from '../components/StatusBadge'
 import type { ApplicationStatus } from '../lib/constants'
 
 export default function Dashboard() {
+  useSEO({ title: '进度概览 - 校招助手', path: '/dashboard' })
   const { applications, loading } = useApplications()
 
   const statusCounts = useMemo(() => {

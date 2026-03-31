@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MapPin, Calendar, ExternalLink, Plus, Check, Search, Loader2, Building2, Flame, Briefcase } from 'lucide-react'
+import { useSEO } from '../hooks/useSEO'
 import { useJobs } from '../hooks/useJobs'
 import { useApplications } from '../hooks/useApplications'
 import { useAuth } from '../hooks/useAuth'
@@ -22,6 +23,11 @@ const QUICK_TAGS = [
 type QuickTag = (typeof QUICK_TAGS)[number]['key']
 
 export default function Jobs() {
+  useSEO({
+    title: '校招岗位库 - 2万+春招秋招岗位筛选查询',
+    description: '覆盖互联网大厂、央企国企、银行等校招岗位，每周更新，免费浏览',
+    path: '/jobs',
+  })
   const navigate = useNavigate()
   const { applications, importJob, deleteApplication, isAtFreeLimit } = useApplications()
   const { user } = useAuth()

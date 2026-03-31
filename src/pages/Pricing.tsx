@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Check, Sparkles, Ticket, Loader2, ShieldCheck, X } from 'lucide-react'
 import { useSubscription } from '../hooks/useSubscription'
+import { useSEO } from '../hooks/useSEO'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 
@@ -11,6 +12,7 @@ const PLAN_TYPE_LABEL: Record<string, string> = {
 }
 
 export default function Pricing() {
+  useSEO({ title: '升级计划 - 校招助手', description: '9.9元解锁全部功能，无限岗位管理、看板、提醒、笔试真题下载', path: '/pricing' })
   const { user } = useAuth()
   const navigate = useNavigate()
   const { membership, loading: memberLoading, redeem } = useSubscription()

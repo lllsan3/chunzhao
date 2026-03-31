@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useSEO } from '../hooks/useSEO'
 
 const ERROR_MAP: Record<string, string> = {
   'Invalid login credentials': '邮箱或密码错误',
@@ -24,6 +25,7 @@ function translateError(msg: string): string {
 }
 
 export default function Login() {
+  useSEO({ title: '登录 - 校招助手', path: '/login' })
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

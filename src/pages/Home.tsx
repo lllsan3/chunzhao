@@ -61,7 +61,7 @@ export default function Home() {
         <h2 className="text-xl md:text-2xl font-bold text-white">
           准备好掌控你的春招节奏了吗？
         </h2>
-        <p className="mt-3 text-ink-muted/70 text-sm max-w-md mx-auto">
+        <p className="mt-3 text-white/60 text-sm max-w-md mx-auto">
           加入数千名正在使用校招助手的同学，用结构化的工作流代替混乱的收藏夹。
         </p>
         <Link

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Search, Download, FileText, Building2 } from 'lucide-react'
+import { Search, ExternalLink, FileText, Building2 } from 'lucide-react'
 
 interface ExamResource {
   id: string
@@ -15,16 +15,16 @@ const EXAM_DATA: ExamResource[] = [
   {
     id: '1',
     company: '腾讯',
-    title: '腾讯2026春招技术笔试真题',
+    title: '腾讯校招技术笔试真题',
     year: '2026',
     type: '技术',
     tags: ['前端', '后端', '算法'],
-    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=179',
+    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=138',
   },
   {
     id: '2',
     company: '字节跳动',
-    title: '字节跳动2026春招研发笔试合集',
+    title: '字节跳动校招研发笔试合集',
     year: '2026',
     type: '技术',
     tags: ['算法', '系统设计'],
@@ -33,78 +33,78 @@ const EXAM_DATA: ExamResource[] = [
   {
     id: '3',
     company: '华为',
-    title: '华为2026春招机试真题汇总',
+    title: '华为校招机试真题汇总',
     year: '2026',
     type: '技术',
     tags: ['编程', 'OD机试'],
-    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=138',
+    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=239',
   },
   {
     id: '4',
     company: '阿里巴巴',
-    title: '阿里巴巴2026春招笔试真题',
+    title: '阿里巴巴校招笔试真题',
     year: '2026',
     type: '技术',
     tags: ['算法', '数据结构'],
-    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=139',
+    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=134',
   },
   {
     id: '5',
     company: '美团',
-    title: '美团2026春招技术笔试题集',
+    title: '美团校招技术笔试题集',
     year: '2026',
     type: '技术',
     tags: ['算法', '后端'],
-    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=138',
+    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=179',
   },
   {
     id: '6',
-    company: '中国银行',
-    title: '中国银行2026春招行测真题',
-    year: '2026',
-    type: '行测',
-    tags: ['数量关系', '言语理解', '判断推理'],
-    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=179',
-  },
-  {
-    id: '7',
-    company: '国家电网',
-    title: '国家电网2026春招笔试真题',
-    year: '2026',
-    type: '综合',
-    tags: ['电气', '计算机', '通信'],
-    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=179',
-  },
-  {
-    id: '8',
-    company: '招商银行',
-    title: '招商银行2026春招笔试合集',
-    year: '2026',
-    type: '行测',
-    tags: ['EPI', '性格测试', '英语'],
-    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=179',
-  },
-  {
-    id: '9',
     company: '京东',
-    title: '京东2026春招技术笔试真题',
+    title: '京东校招技术笔试真题',
     year: '2026',
     type: '技术',
     tags: ['算法', 'Java', '数据库'],
-    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=179',
+    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=151',
+  },
+  {
+    id: '7',
+    company: '百度',
+    title: '百度校招笔试真题汇总',
+    year: '2026',
+    type: '技术',
+    tags: ['算法', 'AI', '系统设计'],
+    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=139',
+  },
+  {
+    id: '8',
+    company: '小红书',
+    title: '小红书校招笔试真题',
+    year: '2026',
+    type: '技术',
+    tags: ['算法', '数据'],
+    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=715',
+  },
+  {
+    id: '9',
+    company: '快手',
+    title: '快手校招笔试真题合集',
+    year: '2026',
+    type: '技术',
+    tags: ['算法', '工程'],
+    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=898',
   },
   {
     id: '10',
-    company: '网易',
-    title: '网易2026春招编程笔试汇总',
+    company: '滴滴',
+    title: '滴滴校招笔试真题汇总',
     year: '2026',
     type: '技术',
-    tags: ['算法', '游戏开发'],
-    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=179',
+    tags: ['算法', '策略'],
+    url: 'https://www.nowcoder.com/exam/company?currentTab=recommand&jobId=100&selectStatus=0&tagId=652',
   },
 ]
 
-const QUICK_COMPANIES = ['全部', '腾讯', '字节跳动', '华为', '阿里巴巴', '美团', '中国银行', '国家电网']
+const QUICK_COMPANIES = ['全部', '腾讯', '字节跳动', '华为', '阿里巴巴', '美团', '京东', '百度']
 
 export default function Exam() {
   const [search, setSearch] = useState('')
@@ -222,8 +222,8 @@ export default function Exam() {
                   rel="noopener noreferrer"
                   className="shrink-0 flex items-center gap-1 px-3 py-2 rounded-lg bg-amber-50 text-amber-600 text-xs font-medium hover:bg-amber-100 transition-colors"
                 >
-                  <Download className="w-3.5 h-3.5" />
-                  查看
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  前往
                 </a>
               </div>
             ))

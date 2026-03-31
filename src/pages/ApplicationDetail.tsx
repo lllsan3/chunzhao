@@ -5,6 +5,7 @@ import {
   AlertTriangle, CheckCircle, Clock, Trash2
 } from 'lucide-react'
 import { trackFailure, trackSuccess } from '../lib/errorTracker'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { supabase } from '../lib/supabase'
 import { STATUS_MAP, STATUS_LIST } from '../lib/constants'
 import type { ApplicationStatus } from '../lib/constants'
@@ -51,6 +52,7 @@ export default function ApplicationDetail() {
   const { toast } = useToast()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
     if (!applicationId) return
@@ -59,8 +61,10 @@ export default function ApplicationDetail() {
       .select('*, job:jobs(description, resume_tips, evaluation, risk_notes, company_type, target_graduates, referral_code, tags)')
       .eq('id', applicationId)
       .single()
-      .then(({ data }) => {
-        if (data) {
+      .then(({ data, error }) => {
+        if (error) {
+          setLoadError(true)
+        } else if (data) {
           const d = data as FullApplication
           setApp(d)
           setNotes(d.notes || '')
@@ -69,6 +73,11 @@ export default function ApplicationDetail() {
         setLoading(false)
       })
   }, [applicationId])
+
+  // Cleanup notes auto-save timer on unmount
+  useEffect(() => {
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current) }
+  }, [])
 
   const handleStatusChange = async (status: ApplicationStatus) => {
     if (!app) return
@@ -82,17 +91,22 @@ export default function ApplicationDetail() {
     }
   }
 
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+
   const handleNotesChange = (value: string) => {
     setNotes(value)
+    setSaveStatus('saving')
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(async () => {
       if (!app) return
       const { error } = await updateNotes(app.id, value)
       if (error) {
-        toast('error', trackFailure('notes', '保存失败了，检查下网络再试'))
+        setSaveStatus('error')
+        trackFailure('notes', '')
       } else {
+        setSaveStatus('saved')
         trackSuccess('notes')
-        toast('success', '已保存，放心')
+        setTimeout(() => setSaveStatus('idle'), 2000)
       }
     }, 800)
   }
@@ -105,11 +119,23 @@ export default function ApplicationDetail() {
   }
 
   const copyText = (text: string) => {
-    navigator.clipboard.writeText(text)
-    toast('success', '已复制到剪贴板')
+    try {
+      navigator.clipboard.writeText(text)
+      toast('success', '已复制到剪贴板')
+    } catch {
+      toast('error', '复制失败，请手动复制')
+    }
   }
 
   if (loading) return <div className="min-h-screen bg-page flex items-center justify-center text-ink-muted/70">加载中...</div>
+  if (loadError) return (
+    <div className="min-h-screen bg-page flex items-center justify-center">
+      <div className="text-center">
+        <p className="text-ink-muted mb-4">数据加载失败，请刷新页面重试</p>
+        <button onClick={() => window.location.reload()} className="px-5 py-2.5 rounded-xl bg-brand text-white text-sm font-medium hover:bg-brand-hover">重新加载</button>
+      </div>
+    </div>
+  )
   if (!app) return <div className="min-h-screen bg-page flex items-center justify-center text-ink-muted/70">未找到该申请</div>
 
   const job = app.job
@@ -180,7 +206,14 @@ export default function ApplicationDetail() {
 
             {/* Notes */}
             <div className="bg-white rounded-2xl border border-line-light shadow-sm p-6">
-              <h2 className="font-semibold text-ink mb-3">进度跟进笔记</h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-semibold text-ink">进度跟进笔记</h2>
+                <span className={`text-[11px] transition-opacity ${saveStatus === 'idle' ? 'opacity-0' : 'opacity-100'} ${
+                  saveStatus === 'saving' ? 'text-ink-muted' : saveStatus === 'saved' ? 'text-ok' : 'text-red-500'
+                }`}>
+                  {saveStatus === 'saving' ? '保存中...' : saveStatus === 'saved' ? '已保存' : saveStatus === 'error' ? '保存失败' : ''}
+                </span>
+              </div>
               <textarea
                 value={notes}
                 onChange={(e) => handleNotesChange(e.target.value)}
@@ -263,37 +296,18 @@ export default function ApplicationDetail() {
         </div>
       </div>
 
-      {/* Delete confirm */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowDeleteConfirm(false)}>
-          <div className="absolute inset-0 bg-black/40" />
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-xs p-5" onClick={(e) => e.stopPropagation()}>
-            <p className="text-sm text-ink mb-4">确定要移除这个岗位吗？</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-2 rounded-xl text-sm border border-line text-ink-muted hover:bg-tag-bg transition-colors"
-              >
-                取消
-              </button>
-              <button
-                onClick={async () => {
-                  const { error } = await deleteApplication(app.id)
-                  setShowDeleteConfirm(false)
-                  if (error) {
-                    toast('error', '删除失败，请重试')
-                  } else {
-                    toast('success', '已移除')
-                    navigate('/board')
-                  }
-                }}
-                className="flex-1 py-2 rounded-xl text-sm bg-red-500 text-white hover:bg-red-600 transition-colors"
-              >
-                确认移除
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="确定要移除这个岗位吗？"
+          confirmLabel="确认移除"
+          onCancel={() => setShowDeleteConfirm(false)}
+          onConfirm={async () => {
+            const { error } = await deleteApplication(app.id)
+            setShowDeleteConfirm(false)
+            if (error) toast('error', '删除失败，请重试')
+            else { toast('success', '已移除'); navigate('/board') }
+          }}
+        />
       )}
     </div>
   )

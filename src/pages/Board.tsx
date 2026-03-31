@@ -7,10 +7,11 @@ import {
 import { useDroppable } from '@dnd-kit/core'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
-import { MapPin, Search, Plus, X, Loader2, LogIn, Trash2 } from 'lucide-react'
+import { MapPin, Search, Plus, X, Loader2, Trash2 } from 'lucide-react'
 import { trackFailure, trackSuccess } from '../lib/errorTracker'
+import { ConfirmDialog } from '../components/ConfirmDialog'
+import { timeAgo } from '../lib/time'
 import { useApplications, type Application } from '../hooks/useApplications'
-import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
 import { STATUS_MAP, STATUS_LIST, STATUS_COLORS } from '../lib/constants'
 import type { ApplicationStatus } from '../lib/constants'
@@ -19,7 +20,6 @@ import { PaywallModal } from '../components/PaywallModal'
 
 export default function Board() {
   const { applications, loading, updateStatus, manualAdd, deleteApplication, isAtFreeLimit } = useApplications()
-  const { user } = useAuth()
   const { membership } = useSubscription()
   const { toast } = useToast()
   const [search, setSearch] = useState('')
@@ -73,20 +73,6 @@ export default function Board() {
     </div>
   )
 
-  // Unauthenticated guard
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-page flex items-center justify-center">
-        <div className="text-center">
-          <LogIn className="w-10 h-10 text-line mx-auto mb-4" />
-          <p className="text-ink-muted mb-4">请先登录以管理你的申请</p>
-          <Link to="/login?redirect=/board" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand text-white text-sm font-medium hover:bg-brand-hover">
-            去登录
-          </Link>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-page">
@@ -215,37 +201,19 @@ export default function Board() {
 
       {showPaywall && <PaywallModal onClose={() => setShowPaywall(false)} />}
 
-      {/* Delete confirm dialog */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setDeleteConfirm(null)}>
-          <div className="absolute inset-0 bg-black/40" />
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-xs p-5" onClick={(e) => e.stopPropagation()}>
-            <p className="text-sm text-ink mb-4">确定要移除这个岗位吗？</p>
-            <p className="text-xs text-ink-muted mb-4 line-clamp-1">{deleteConfirm.title}</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="flex-1 py-2 rounded-xl text-sm border border-line text-ink-muted hover:bg-tag-bg transition-colors"
-              >
-                取消
-              </button>
-              <button
-                onClick={async () => {
-                  const { error } = await deleteApplication(deleteConfirm.id)
-                  if (error) {
-                    toast('error', '删除失败，请重试')
-                  } else {
-                    toast('success', '已移除')
-                  }
-                  setDeleteConfirm(null)
-                }}
-                className="flex-1 py-2 rounded-xl text-sm bg-red-500 text-white hover:bg-red-600 transition-colors"
-              >
-                确认移除
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="确定要移除这个岗位吗？"
+          subtitle={deleteConfirm.title}
+          confirmLabel="确认移除"
+          onCancel={() => setDeleteConfirm(null)}
+          onConfirm={async () => {
+            const { error } = await deleteApplication(deleteConfirm.id)
+            if (error) toast('error', '删除失败，请重试')
+            else toast('success', '已移除')
+            setDeleteConfirm(null)
+          }}
+        />
       )}
 
       {/* Add modal */}
@@ -529,17 +497,6 @@ function ManualAddModal({
       </div>
     </div>
   )
-}
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 1) return '刚刚'
-  if (minutes < 60) return `${minutes} 分钟前`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours} 小时前`
-  const days = Math.floor(hours / 24)
-  return `${days} 天前`
 }
 
 function getColorHex(status: ApplicationStatus): string {

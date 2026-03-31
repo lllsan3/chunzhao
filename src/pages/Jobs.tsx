@@ -9,6 +9,7 @@ import { useToast } from '../components/Toast'
 import { COMPANY_TYPES } from '../lib/constants'
 import { normalizeCity, getUniqueCities } from '../lib/cityNormalize'
 import { PaywallModal } from '../components/PaywallModal'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { trackFailure, trackSuccess } from '../lib/errorTracker'
 
 const QUICK_TAGS = [
@@ -337,29 +338,14 @@ export default function Jobs() {
 
       {showPaywall && <PaywallModal onClose={() => setShowPaywall(false)} />}
 
-      {/* Remove confirm dialog */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setDeleteConfirm(null)}>
-          <div className="absolute inset-0 bg-black/40" />
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-xs p-5" onClick={(e) => e.stopPropagation()}>
-            <p className="text-sm text-ink mb-2">确定要移除这个岗位吗？</p>
-            <p className="text-xs text-ink-muted mb-4 line-clamp-1">{deleteConfirm.title}</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="flex-1 py-2 rounded-xl text-sm border border-line text-ink-muted hover:bg-tag-bg transition-colors"
-              >
-                取消
-              </button>
-              <button
-                onClick={handleConfirmRemove}
-                className="flex-1 py-2 rounded-xl text-sm bg-red-500 text-white hover:bg-red-600 transition-colors"
-              >
-                确认移除
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="确定要移除这个岗位吗？"
+          subtitle={deleteConfirm.title}
+          confirmLabel="确认移除"
+          onCancel={() => setDeleteConfirm(null)}
+          onConfirm={handleConfirmRemove}
+        />
       )}
     </div>
   )

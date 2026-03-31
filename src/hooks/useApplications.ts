@@ -23,6 +23,7 @@ export interface Application {
 }
 
 const CACHE_KEY = 'applications'
+const FREE_LIMIT = 3
 
 export function useApplications() {
   const { user } = useAuth()
@@ -38,6 +39,13 @@ export function useApplications() {
   })
 
   const fetchApplications = useCallback(async () => {
+    // Skip query when not logged in
+    if (!user) {
+      setApplications([])
+      setLoading(false)
+      return
+    }
+
     const cached = getCached<Application[]>(CACHE_KEY)
 
     if (cached?.fresh) {
@@ -59,12 +67,18 @@ export function useApplications() {
       setCache(CACHE_KEY, rows)
     }
     setLoading(false)
-  }, [])
+  }, [user])
 
-  // Initial fetch
+  // Re-fetch when user changes (login/logout)
   useEffect(() => {
+    if (!user) {
+      setApplications([])
+      setLoading(false)
+      invalidateCache(CACHE_KEY)
+      return
+    }
     fetchApplications()
-  }, [fetchApplications])
+  }, [user, fetchApplications])
 
   // Realtime subscription — only for logged-in users
   useEffect(() => {
@@ -135,6 +149,9 @@ export function useApplications() {
     }
   }, [user])
 
+  // Free tier limit check
+  const isAtFreeLimit = applications.length >= FREE_LIMIT
+
   const importJob = async (job: {
     id: string
     title: string
@@ -143,11 +160,10 @@ export function useApplications() {
     deadline: string | null
     jd_url: string | null
   }) => {
-    const { data: userData } = await supabase.auth.getUser()
-    if (!userData.user) return { error: { message: '请先登录' } }
+    if (!user) return { error: { message: '请先登录' } }
 
     const { error } = await supabase.from('user_applications').insert({
-      user_id: userData.user.id,
+      user_id: user.id,
       job_id: job.id,
       title: job.title,
       company: job.company,
@@ -158,14 +174,12 @@ export function useApplications() {
     })
 
     if (!error) {
-      // Realtime will handle the state update, but invalidate cache freshness
       invalidateCache(CACHE_KEY)
     }
     return { error }
   }
 
   const updateStatus = async (id: string, status: ApplicationStatus) => {
-    // Optimistic update
     setApplications((prev) => {
       const updated = prev.map((app) =>
         app.id === id ? { ...app, status } : app
@@ -180,7 +194,6 @@ export function useApplications() {
       .eq('id', id)
 
     if (error) {
-      // Revert on failure
       invalidateCache(CACHE_KEY)
       await fetchApplications()
     }
@@ -214,11 +227,10 @@ export function useApplications() {
     deadline?: string
     jd_url?: string
   }) => {
-    const { data: userData } = await supabase.auth.getUser()
-    if (!userData.user) return { error: { message: '请先登录' } }
+    if (!user) return { error: { message: '请先登录' } }
 
     const { error } = await supabase.from('user_applications').insert({
-      user_id: userData.user.id,
+      user_id: user.id,
       job_id: null,
       title: fields.title,
       company: fields.company,
@@ -238,6 +250,7 @@ export function useApplications() {
   return {
     applications,
     loading,
+    isAtFreeLimit,
     importJob,
     manualAdd,
     updateStatus,

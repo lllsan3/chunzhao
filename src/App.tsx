@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import { Navbar } from './components/Layout/Navbar'
 import { ToastProvider } from './components/Toast'
 
@@ -21,6 +21,20 @@ function PageLoader() {
   )
 }
 
+function NotFound() {
+  return (
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="text-center">
+        <p className="text-6xl font-bold text-slate-200 mb-2">404</p>
+        <p className="text-slate-500 mb-6">页面不存在</p>
+        <Link to="/" className="inline-flex items-center px-5 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800">
+          返回首页
+        </Link>
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -38,6 +52,7 @@ export default function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/exam" element={<Exam />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
         </div>

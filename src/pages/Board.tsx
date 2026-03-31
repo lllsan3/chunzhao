@@ -7,18 +7,24 @@ import {
 import { useDroppable } from '@dnd-kit/core'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
-import { MapPin, Search, Plus, X, Loader2 } from 'lucide-react'
+import { MapPin, Search, Plus, X, Loader2, LogIn } from 'lucide-react'
 import { useApplications, type Application } from '../hooks/useApplications'
+import { useAuth } from '../hooks/useAuth'
+import { useSubscription } from '../hooks/useSubscription'
 import { STATUS_MAP, STATUS_LIST, STATUS_COLORS } from '../lib/constants'
 import type { ApplicationStatus } from '../lib/constants'
 import { useToast } from '../components/Toast'
+import { PaywallModal } from '../components/PaywallModal'
 
 export default function Board() {
-  const { applications, loading, updateStatus, manualAdd } = useApplications()
+  const { applications, loading, updateStatus, manualAdd, isAtFreeLimit } = useApplications()
+  const { user } = useAuth()
+  const { membership } = useSubscription()
   const { toast } = useToast()
   const [search, setSearch] = useState('')
   const [mobileTab, setMobileTab] = useState<ApplicationStatus>('pending_review')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showPaywall, setShowPaywall] = useState(false)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
@@ -53,6 +59,21 @@ export default function Board() {
 
   if (loading) return <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center text-slate-400">加载中...</div>
 
+  // Unauthenticated guard
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center">
+        <div className="text-center">
+          <LogIn className="w-10 h-10 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-500 mb-4">请先登录以管理你的申请</p>
+          <Link to="/login?redirect=/board" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800">
+            去登录
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-[#F7F8FA]">
       <div className="max-w-full mx-auto px-4 py-6">
@@ -74,7 +95,13 @@ export default function Board() {
               />
             </div>
             <button
-              onClick={() => setShowAddModal(true)}
+              onClick={() => {
+                if (isAtFreeLimit && !membership.isMember) {
+                  setShowPaywall(true)
+                } else {
+                  setShowAddModal(true)
+                }
+              }}
               className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors shrink-0"
             >
               <Plus className="w-4 h-4" />
@@ -124,6 +151,8 @@ export default function Board() {
           </div>
         </div>
       </div>
+
+      {showPaywall && <PaywallModal onClose={() => setShowPaywall(false)} />}
 
       {/* Add modal */}
       {showAddModal && (

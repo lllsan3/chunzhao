@@ -2,6 +2,27 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
+const ERROR_MAP: Record<string, string> = {
+  'Invalid login credentials': '邮箱或密码错误',
+  'Email not confirmed': '请先验证邮箱',
+  'User already registered': '该邮箱已注册',
+  'Signup requires a valid password': '请输入有效密码（至少 6 位）',
+  'Unable to validate email address: invalid format': '邮箱格式不正确',
+  'Password should be at least 6 characters': '密码至少 6 位',
+  'For security purposes, you can only request this after': '操作过于频繁，请稍后再试',
+}
+
+function translateError(msg: string): string {
+  // Exact match
+  if (ERROR_MAP[msg]) return ERROR_MAP[msg]
+  // Partial match
+  for (const [key, value] of Object.entries(ERROR_MAP)) {
+    if (msg.includes(key)) return value
+  }
+  // Fallback: show original if no match
+  return msg
+}
+
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
@@ -11,21 +32,35 @@ export default function Login() {
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const redirectTo = searchParams.get('redirect') || '/jobs'
+  const rawRedirect = searchParams.get('redirect') || '/jobs'
+  // Validate redirect is a relative path
+  const redirectTo = rawRedirect.startsWith('/') ? rawRedirect : '/jobs'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    const result = isSignUp
-      ? await signUp(email, password)
-      : await signIn(email, password)
-
-    if (result.error) {
-      setError(result.error.message)
+    if (isSignUp) {
+      const result = await signUp(email, password)
+      if (result.error) {
+        setError(translateError(result.error.message))
+      } else {
+        // Email verification is disabled — sign in directly after signup
+        const loginResult = await signIn(email, password)
+        if (loginResult.error) {
+          setError(translateError(loginResult.error.message))
+        } else {
+          navigate(redirectTo)
+        }
+      }
     } else {
-      navigate(redirectTo)
+      const result = await signIn(email, password)
+      if (result.error) {
+        setError(translateError(result.error.message))
+      } else {
+        navigate(redirectTo)
+      }
     }
     setLoading(false)
   }
@@ -41,7 +76,7 @@ export default function Login() {
           {/* Tabs */}
           <div className="flex bg-slate-100 rounded-lg p-0.5 mb-6">
             <button
-              onClick={() => setIsSignUp(false)}
+              onClick={() => { setIsSignUp(false); setError('') }}
               className={`flex-1 py-2 text-sm rounded-md transition-colors ${
                 !isSignUp ? 'bg-white shadow-sm text-slate-900 font-medium' : 'text-slate-500'
               }`}
@@ -49,7 +84,7 @@ export default function Login() {
               登录
             </button>
             <button
-              onClick={() => setIsSignUp(true)}
+              onClick={() => { setIsSignUp(true); setError('') }}
               className={`flex-1 py-2 text-sm rounded-md transition-colors ${
                 isSignUp ? 'bg-white shadow-sm text-slate-900 font-medium' : 'text-slate-500'
               }`}

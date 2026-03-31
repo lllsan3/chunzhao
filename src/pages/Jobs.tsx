@@ -4,9 +4,11 @@ import { MapPin, Calendar, ExternalLink, Plus, Check, Search, Loader2, Building2
 import { useJobs } from '../hooks/useJobs'
 import { useApplications } from '../hooks/useApplications'
 import { useAuth } from '../hooks/useAuth'
+import { useSubscription } from '../hooks/useSubscription'
 import { useToast } from '../components/Toast'
 import { COMPANY_TYPES } from '../lib/constants'
 import { normalizeCity, getUniqueCities } from '../lib/cityNormalize'
+import { PaywallModal } from '../components/PaywallModal'
 
 const QUICK_TAGS = [
   { key: '全部', icon: null, label: '全部' },
@@ -19,9 +21,11 @@ type QuickTag = (typeof QUICK_TAGS)[number]['key']
 
 export default function Jobs() {
   const navigate = useNavigate()
-  const { applications, importJob } = useApplications()
+  const { applications, importJob, isAtFreeLimit } = useApplications()
   const { user } = useAuth()
+  const { membership } = useSubscription()
   const { toast } = useToast()
+  const [showPaywall, setShowPaywall] = useState(false)
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [cityFilter, setCityFilter] = useState('')
@@ -59,6 +63,11 @@ export default function Jobs() {
   const handleImport = async (job: (typeof jobs)[0]) => {
     if (!user) {
       navigate(`/login?redirect=/jobs`)
+      return
+    }
+    // Free tier limit
+    if (isAtFreeLimit && !membership.isMember) {
+      setShowPaywall(true)
       return
     }
     const { error } = await importJob(job)
@@ -277,6 +286,8 @@ export default function Jobs() {
           已加载 {filtered.length} 个职位{hasMore ? '，点击加载更多' : ''}
         </p>
       </div>
+
+      {showPaywall && <PaywallModal onClose={() => setShowPaywall(false)} />}
     </div>
   )
 }

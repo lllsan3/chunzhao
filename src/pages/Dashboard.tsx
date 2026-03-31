@@ -1,11 +1,13 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Kanban, Clock, Users, FileText, Send, PenLine, Award, XCircle } from 'lucide-react'
+import { Kanban, Clock, Users, FileText, Send, PenLine, Award, XCircle, LogIn } from 'lucide-react'
 import { useApplications } from '../hooks/useApplications'
+import { useAuth } from '../hooks/useAuth'
 import { StatusBadge } from '../components/StatusBadge'
 import type { ApplicationStatus } from '../lib/constants'
 
 export default function Dashboard() {
+  const { user } = useAuth()
   const { applications, loading } = useApplications()
 
   const statusCounts = useMemo(() => {
@@ -34,6 +36,20 @@ export default function Dashboard() {
   )
 
   if (loading) return <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center text-slate-400">加载中...</div>
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center">
+        <div className="text-center">
+          <LogIn className="w-10 h-10 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-500 mb-4">请先登录以查看你的申请进度</p>
+          <Link to="/login?redirect=/dashboard" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800">
+            去登录
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   const statCards: { label: string; status: ApplicationStatus | null; icon: typeof Kanban; color: string }[] = [
     { label: '总导入职位', status: null, icon: Kanban, color: 'text-blue-600 bg-blue-50' },

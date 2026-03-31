@@ -317,14 +317,23 @@ export function useApplications() {
   }
 
   const deleteApplication = async (id: string) => {
+    // Optimistic: remove from local state immediately
+    const prev = applications
+    setApplications((curr) => {
+      const updated = curr.filter((a) => a.id !== id)
+      setCache(CACHE_KEY, updated)
+      return updated
+    })
+
     const { error } = await supabase
       .from('user_applications')
       .delete()
       .eq('id', id)
 
-    if (!error) {
-      // Realtime will handle state update, but invalidate cache
-      invalidateCache(CACHE_KEY)
+    if (error) {
+      // Rollback
+      setApplications(prev)
+      setCache(CACHE_KEY, prev)
     }
     return { error }
   }

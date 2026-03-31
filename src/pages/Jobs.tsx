@@ -75,7 +75,9 @@ export default function Jobs() {
     const { error } = await importJob(job)
     setImportingId(null)
     if (error) {
-      if (error.message?.includes('duplicate') || error.message?.includes('unique')) {
+      if (error.message?.includes('FREE_LIMIT_REACHED')) {
+        setShowPaywall(true)
+      } else if (error.message?.includes('duplicate') || error.message?.includes('unique')) {
         toast('error', '该职位已导入过')
       } else {
         toast('error', trackFailure('import', '没导进去，网络开小差了，再试一次'))

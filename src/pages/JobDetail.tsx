@@ -66,7 +66,11 @@ export default function JobDetail() {
     const { error } = await importJob(job)
     setImporting(false)
     if (error) {
-      toast('error', error.message || '导入失败')
+      if (error.message?.includes('FREE_LIMIT_REACHED')) {
+        toast('error', '免费版最多管理 3 个职位，请升级后继续添加')
+      } else {
+        toast('error', error.message || '导入失败')
+      }
     } else {
       toast('success', '导入成功，可在看板中管理')
     }

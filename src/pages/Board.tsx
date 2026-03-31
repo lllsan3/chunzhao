@@ -208,6 +208,10 @@ export default function Board() {
           onSubmit={async (fields) => {
             const { error } = await manualAdd(fields)
             if (error) {
+              if (error.message?.includes('FREE_LIMIT_REACHED')) {
+                setShowPaywall(true)
+                return true // close modal
+              }
               toast('error', trackFailure('manualAdd', '添加失败了，再试一次'))
               return false
             }

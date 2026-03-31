@@ -72,7 +72,6 @@ export default function Jobs() {
       return
     }
     setImportingId(job.id)
-    toast('success', '收到！正在帮你收藏这个岗位')
     const { error } = await importJob(job)
     setImportingId(null)
     if (error) {

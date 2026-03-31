@@ -70,7 +70,6 @@ export default function ApplicationDetail() {
 
   const handleStatusChange = async (status: ApplicationStatus) => {
     if (!app) return
-    toast('success', '好的，帮你挪一下～')
     const { error } = await updateStatus(app.id, status)
     if (error) {
       toast('error', trackFailure('status', '状态没更新成功，再拖一次试试'))
@@ -86,7 +85,6 @@ export default function ApplicationDetail() {
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(async () => {
       if (!app) return
-      toast('success', '记下了，自动保存中')
       const { error } = await updateNotes(app.id, value)
       if (error) {
         toast('error', trackFailure('notes', '保存失败了，检查下网络再试'))

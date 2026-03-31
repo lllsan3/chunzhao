@@ -54,7 +54,6 @@ export default function Board() {
     const app = applications.find((a) => a.id === appId)
     if (!app || app.status === newStatus) return
 
-    toast('success', '好的，帮你挪一下～')
     const { error } = await updateStatus(appId, newStatus)
     if (error) {
       toast('error', trackFailure('drag', '状态没更新成功，再拖一次试试'))
@@ -173,7 +172,6 @@ export default function Board() {
         <ManualAddModal
           onClose={() => setShowAddModal(false)}
           onSubmit={async (fields) => {
-            toast('success', '正在帮你添加进去')
             const { error } = await manualAdd(fields)
             if (error) {
               toast('error', trackFailure('manualAdd', '添加失败了，再试一次'))

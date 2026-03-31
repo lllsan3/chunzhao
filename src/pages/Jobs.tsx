@@ -9,6 +9,7 @@ import { useToast } from '../components/Toast'
 import { COMPANY_TYPES } from '../lib/constants'
 import { normalizeCity, getUniqueCities } from '../lib/cityNormalize'
 import { PaywallModal } from '../components/PaywallModal'
+import { trackFailure, trackSuccess } from '../lib/errorTracker'
 
 const QUICK_TAGS = [
   { key: '全部', icon: null, label: '全部' },
@@ -26,6 +27,7 @@ export default function Jobs() {
   const { membership } = useSubscription()
   const { toast } = useToast()
   const [showPaywall, setShowPaywall] = useState(false)
+  const [importingId, setImportingId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [cityFilter, setCityFilter] = useState('')
@@ -65,20 +67,23 @@ export default function Jobs() {
       navigate(`/login?redirect=/jobs`)
       return
     }
-    // Free tier limit
     if (isAtFreeLimit && !membership.isMember) {
       setShowPaywall(true)
       return
     }
+    setImportingId(job.id)
+    toast('success', '收到！正在帮你收藏这个岗位')
     const { error } = await importJob(job)
+    setImportingId(null)
     if (error) {
       if (error.message?.includes('duplicate') || error.message?.includes('unique')) {
         toast('error', '该职位已导入过')
       } else {
-        toast('error', error.message || '导入失败')
+        toast('error', trackFailure('import', '没导进去，网络开小差了，再试一次'))
       }
     } else {
-      toast('success', '导入成功')
+      trackSuccess('import')
+      toast('success', '搞定！已加入申请池')
     }
   }
 
@@ -172,7 +177,10 @@ export default function Jobs() {
 
         {/* Grid */}
         {loading ? (
-          <div className="text-center py-20 text-slate-400">加载中...</div>
+          <div className="text-center py-20 text-slate-400">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+            正在加载最新岗位...
+          </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20 text-slate-400">暂无匹配职位</div>
         ) : (
@@ -234,17 +242,24 @@ export default function Jobs() {
                       )}
                       <button
                         onClick={() => handleImport(job)}
-                        disabled={imported}
+                        disabled={imported || importingId === job.id}
                         className={`ml-auto flex items-center gap-1 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
                           imported
                             ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                            : 'bg-slate-900 text-white hover:bg-slate-800'
+                            : importingId === job.id
+                              ? 'bg-slate-700 text-white cursor-wait'
+                              : 'bg-slate-900 text-white hover:bg-slate-800'
                         }`}
                       >
                         {imported ? (
                           <>
                             <Check className="w-3.5 h-3.5" />
                             已导入
+                          </>
+                        ) : importingId === job.id ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            收藏中...
                           </>
                         ) : (
                           <>

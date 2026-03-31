@@ -8,6 +8,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { MapPin, Search, Plus, X, Loader2, LogIn } from 'lucide-react'
+import { trackFailure, trackSuccess } from '../lib/errorTracker'
 import { useApplications, type Application } from '../hooks/useApplications'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../hooks/useSubscription'
@@ -53,11 +54,24 @@ export default function Board() {
     const app = applications.find((a) => a.id === appId)
     if (!app || app.status === newStatus) return
 
+    toast('success', '好的，帮你挪一下～')
     const { error } = await updateStatus(appId, newStatus)
-    if (error) toast('error', '更新失败')
+    if (error) {
+      toast('error', trackFailure('drag', '状态没更新成功，再拖一次试试'))
+    } else {
+      trackSuccess('drag')
+      toast('success', '状态已更新，继续加油')
+    }
   }
 
-  if (loading) return <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center text-slate-400">加载中...</div>
+  if (loading) return (
+    <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center text-slate-400">
+      <div className="text-center">
+        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+        看看你的进度怎么样了...
+      </div>
+    </div>
+  )
 
   // Unauthenticated guard
   if (!user) {
@@ -159,12 +173,14 @@ export default function Board() {
         <ManualAddModal
           onClose={() => setShowAddModal(false)}
           onSubmit={async (fields) => {
+            toast('success', '正在帮你添加进去')
             const { error } = await manualAdd(fields)
             if (error) {
-              toast('error', error.message || '添加失败')
+              toast('error', trackFailure('manualAdd', '添加失败了，再试一次'))
               return false
             }
-            toast('success', '添加成功')
+            trackSuccess('manualAdd')
+            toast('success', '添加成功，已放入申请池')
             return true
           }}
         />

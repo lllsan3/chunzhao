@@ -66,7 +66,7 @@ export function PaywallModal({ onClose }: { onClose: () => void }) {
             className="px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
           >
             {redeeming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ticket className="w-4 h-4" />}
-            兑换
+            {redeeming ? '验证中...' : '兑换'}
           </button>
         </div>
 

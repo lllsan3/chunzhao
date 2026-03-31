@@ -43,16 +43,16 @@ export function useSubscription() {
     const { data, error } = await supabase.rpc('redeem_code', { p_code: code.trim() })
 
     if (error) {
-      return { success: false, message: error.message || '兑换失败，请稍后重试' }
+      return { success: false, message: '兑换没成功，检查一下码是否正确' }
     }
 
     if (data?.success) {
-      // Refresh membership state
       await checkMembership()
-      return { success: true, message: data.message || '兑换成功！' }
+      return { success: true, message: '兑换成功，欢迎解锁完整版！' }
     }
 
-    return { success: false, message: data?.message || '兑换失败' }
+    // RPC returned specific error (not_found, already_used, expired, etc.)
+    return { success: false, message: data?.message || '兑换没成功，检查一下码是否正确' }
   }
 
   return { membership, loading, redeem, refresh: checkMembership }

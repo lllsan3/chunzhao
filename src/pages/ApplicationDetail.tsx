@@ -4,6 +4,7 @@ import {
   ArrowLeft, MapPin, Calendar, ExternalLink, Lightbulb, Copy,
   AlertTriangle, CheckCircle, Clock
 } from 'lucide-react'
+import { trackFailure, trackSuccess } from '../lib/errorTracker'
 import { supabase } from '../lib/supabase'
 import { STATUS_MAP, STATUS_LIST } from '../lib/constants'
 import type { ApplicationStatus } from '../lib/constants'
@@ -69,12 +70,14 @@ export default function ApplicationDetail() {
 
   const handleStatusChange = async (status: ApplicationStatus) => {
     if (!app) return
+    toast('success', '好的，帮你挪一下～')
     const { error } = await updateStatus(app.id, status)
     if (error) {
-      toast('error', '更新失败')
+      toast('error', trackFailure('status', '状态没更新成功，再拖一次试试'))
     } else {
+      trackSuccess('status')
       setApp({ ...app, status })
-      toast('success', `状态已更新为「${STATUS_MAP[status]}」`)
+      toast('success', '状态已更新，继续加油')
     }
   }
 
@@ -83,8 +86,14 @@ export default function ApplicationDetail() {
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(async () => {
       if (!app) return
+      toast('success', '记下了，自动保存中')
       const { error } = await updateNotes(app.id, value)
-      if (!error) toast('success', '笔记已保存')
+      if (error) {
+        toast('error', trackFailure('notes', '保存失败了，检查下网络再试'))
+      } else {
+        trackSuccess('notes')
+        toast('success', '已保存，放心')
+      }
     }, 800)
   }
 
@@ -92,6 +101,7 @@ export default function ApplicationDetail() {
     if (!app) return
     const { error } = await updateReminder(app.id, reminderDate || null, null)
     if (!error) toast('success', '提醒已设置')
+    else toast('error', '提醒设置失败，请重试')
   }
 
   const copyText = (text: string) => {

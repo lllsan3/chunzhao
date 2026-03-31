@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Kanban, Clock, Users, FileText, Send, PenLine, Award, XCircle, LogIn } from 'lucide-react'
+import { Kanban, Clock, Users, FileText, Send, PenLine, Award, XCircle, LogIn, Loader2 } from 'lucide-react'
 import { useApplications } from '../hooks/useApplications'
 import { useAuth } from '../hooks/useAuth'
 import { StatusBadge } from '../components/StatusBadge'
@@ -35,7 +35,14 @@ export default function Dashboard() {
     [applications]
   )
 
-  if (loading) return <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center text-slate-400">加载中...</div>
+  if (loading) return (
+    <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center text-slate-400">
+      <div className="text-center">
+        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+        正在生成进度概览...
+      </div>
+    </div>
+  )
 
   if (!user) {
     return (

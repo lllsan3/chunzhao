@@ -97,6 +97,8 @@ export function useApplications() {
         (payload) => {
           const newRow = payload.new as Application
           setApplications((prev) => {
+            // Skip if already added optimistically
+            if (prev.some((a) => a.id === newRow.id)) return prev
             const updated = [newRow, ...prev]
             setCache(CACHE_KEY, updated)
             return updated
@@ -162,7 +164,7 @@ export function useApplications() {
   }) => {
     if (!user) return { error: { message: '请先登录' } }
 
-    const { error } = await supabase.from('user_applications').insert({
+    const { data, error } = await supabase.from('user_applications').insert({
       user_id: user.id,
       job_id: job.id,
       title: job.title,
@@ -171,10 +173,15 @@ export function useApplications() {
       deadline: job.deadline,
       jd_url: job.jd_url,
       status: 'pending_review',
-    })
+    }).select().single()
 
-    if (!error) {
-      invalidateCache(CACHE_KEY)
+    if (!error && data) {
+      // Optimistic: update local state immediately so UI reflects the change
+      setApplications((prev) => {
+        const updated = [data as Application, ...prev]
+        setCache(CACHE_KEY, updated)
+        return updated
+      })
     }
     return { error }
   }
@@ -229,7 +236,7 @@ export function useApplications() {
   }) => {
     if (!user) return { error: { message: '请先登录' } }
 
-    const { error } = await supabase.from('user_applications').insert({
+    const { data, error } = await supabase.from('user_applications').insert({
       user_id: user.id,
       job_id: null,
       title: fields.title,
@@ -239,10 +246,14 @@ export function useApplications() {
       jd_url: fields.jd_url || null,
       status: 'pending_review',
       source: 'manual',
-    })
+    }).select().single()
 
-    if (!error) {
-      invalidateCache(CACHE_KEY)
+    if (!error && data) {
+      setApplications((prev) => {
+        const updated = [data as Application, ...prev]
+        setCache(CACHE_KEY, updated)
+        return updated
+      })
     }
     return { error }
   }

@@ -50,7 +50,7 @@ export default function JobDetail() {
         setJob(data)
         setLoading(false)
 
-        // Fetch related jobs (same company, fallback to same city)
+        // Fetch related jobs: same company, fallback to same company_type + industry
         if (data) {
           supabase
             .from('jobs')
@@ -61,19 +61,22 @@ export default function JobDetail() {
             .limit(6)
             .then(({ data: byCompany }) => {
               const results = (byCompany ?? []) as RelatedJob[]
-              if (results.length < 6 && data.city) {
-                // Backfill with same-city jobs
+              if (results.length >= 3) {
+                setRelatedJobs(results)
+              } else if (data.company_type) {
+                // Backfill with same company_type (e.g. other 央国企 or 民营企业 jobs)
                 const existingIds = new Set(results.map(r => r.id))
                 supabase
                   .from('jobs')
                   .select('id, title, company, city, tags, deadline, updated_at')
-                  .eq('city', data.city)
+                  .eq('company_type', data.company_type)
                   .neq('id', jobId)
+                  .neq('company', data.company)
                   .order('updated_at', { ascending: false })
                   .limit(6 - results.length)
-                  .then(({ data: byCity }) => {
-                    const cityResults = (byCity ?? []).filter((r: RelatedJob) => !existingIds.has(r.id))
-                    setRelatedJobs([...results, ...cityResults as RelatedJob[]])
+                  .then(({ data: bySimilar }) => {
+                    const extra = (bySimilar ?? []).filter((r: RelatedJob) => !existingIds.has(r.id))
+                    setRelatedJobs([...results, ...extra as RelatedJob[]])
                   })
               } else {
                 setRelatedJobs(results)

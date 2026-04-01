@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useSEO } from '../hooks/useSEO'
 
@@ -68,8 +69,17 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-page flex items-center justify-center px-4">
+    <div className="min-h-screen bg-page flex items-start pt-20 md:items-center md:pt-0 justify-center px-4">
       <div className="w-full max-w-sm">
+        {/* Mobile back arrow */}
+        <button
+          onClick={() => navigate(-1)}
+          className="md:hidden flex items-center gap-1 text-sm text-ink-muted mb-4 -ml-1"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          返回
+        </button>
+
         <div className="bg-white rounded-2xl shadow-sm border border-line-light p-6">
           <h1 className="text-xl font-bold text-ink text-center mb-6">
             {isSignUp ? '创建账号' : '登录校招助手'}
@@ -79,7 +89,7 @@ export default function Login() {
           <div className="flex bg-tag-bg rounded-lg p-0.5 mb-6">
             <button
               onClick={() => { setIsSignUp(false); setError('') }}
-              className={`flex-1 py-2 text-sm rounded-md transition-colors ${
+              className={`flex-1 py-2.5 text-sm rounded-md transition-colors ${
                 !isSignUp ? 'bg-white shadow-sm text-ink font-medium' : 'text-ink-muted'
               }`}
             >
@@ -87,7 +97,7 @@ export default function Login() {
             </button>
             <button
               onClick={() => { setIsSignUp(true); setError('') }}
-              className={`flex-1 py-2 text-sm rounded-md transition-colors ${
+              className={`flex-1 py-2.5 text-sm rounded-md transition-colors ${
                 isSignUp ? 'bg-white shadow-sm text-ink font-medium' : 'text-ink-muted'
               }`}
             >
@@ -127,7 +137,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-brand text-white py-2.5 rounded-lg text-sm font-medium hover:bg-brand-hover disabled:opacity-50 transition-colors"
+              className="w-full bg-brand text-white py-3 rounded-xl text-sm font-semibold hover:bg-brand-hover disabled:opacity-50 transition-colors"
             >
               {loading ? '处理中...' : isSignUp ? '注册' : '登录'}
             </button>

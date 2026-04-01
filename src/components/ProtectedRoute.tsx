@@ -2,13 +2,16 @@ import { Link, useLocation } from 'react-router-dom'
 import { LogIn } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 
-export function ProtectedRoute({ children }: { children: React.ReactNode }) {
+export function ProtectedRoute({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
   const { user, loading } = useAuth()
   const { pathname } = useLocation()
 
-  if (loading) return null // AuthProvider handles initial loading
+  if (loading) return null
 
   if (!user) {
+    // Use custom fallback if provided, otherwise show default login prompt
+    if (fallback) return <>{fallback}</>
+
     return (
       <div className="min-h-screen bg-page flex items-center justify-center">
         <div className="text-center">

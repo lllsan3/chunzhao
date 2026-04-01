@@ -1,6 +1,5 @@
-import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Search, Kanban, BarChart3, CreditCard, FileText, Menu, X, LogIn, LogOut } from 'lucide-react'
+import { Search, Kanban, BarChart3, CreditCard, FileText, LogIn, LogOut, Bell } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { prefetchJobs } from '../../lib/prefetch'
 
@@ -15,7 +14,6 @@ const navItems = [
 export function Navbar() {
   const { pathname } = useLocation()
   const { user, signOut } = useAuth()
-  const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
     <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-line-light">
@@ -24,9 +22,10 @@ export function Navbar() {
         <Link to="/" className="flex items-center gap-2 font-semibold text-ink">
           <Kanban className="w-5 h-5" />
           <span className="text-base">校招助手</span>
+          <span className="hidden md:inline text-xs text-ink-muted font-normal ml-1">春招信息整合 + 进度管理</span>
         </Link>
 
-        {/* Desktop nav */}
+        {/* Desktop nav — unchanged */}
         <div className="hidden md:flex items-center gap-1">
           {navItems.map((item) => {
             const active = pathname.startsWith(item.to)
@@ -48,12 +47,12 @@ export function Navbar() {
           })}
         </div>
 
-        {/* Auth + mobile toggle */}
-        <div className="flex items-center gap-2">
+        {/* Desktop auth */}
+        <div className="hidden md:flex items-center gap-2">
           {user ? (
             <button
               onClick={signOut}
-              className="hidden md:flex items-center gap-1 text-sm text-ink-muted hover:text-ink px-3 py-1.5 rounded-lg hover:bg-tag-bg transition-colors"
+              className="flex items-center gap-1 text-sm text-ink-muted hover:text-ink px-3 py-1.5 rounded-lg hover:bg-tag-bg transition-colors"
             >
               <LogOut className="w-4 h-4" />
               退出
@@ -61,62 +60,21 @@ export function Navbar() {
           ) : (
             <Link
               to="/login"
-              className="hidden md:flex items-center gap-1 text-sm bg-brand text-white px-4 py-1.5 rounded-lg hover:bg-brand-hover transition-colors"
+              className="flex items-center gap-1 text-sm bg-brand text-white px-4 py-1.5 rounded-lg hover:bg-brand-hover transition-colors"
             >
               <LogIn className="w-4 h-4" />
               登录
             </Link>
           )}
-          <button
-            className="md:hidden p-2 text-ink-muted"
-            onClick={() => setMobileOpen(!mobileOpen)}
-          >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </div>
+
+        {/* Mobile right side — notification bell (replaces hamburger) */}
+        <div className="md:hidden flex items-center gap-2">
+          <button className="p-2 text-ink-muted">
+            <Bell className="w-5 h-5" />
           </button>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="md:hidden border-t border-line-light bg-white px-4 pb-4">
-          {navItems.map((item) => {
-            const active = pathname.startsWith(item.to)
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-2 px-3 py-3 rounded-lg text-sm ${
-                  active ? 'bg-tag-bg text-ink font-medium' : 'text-ink-muted'
-                }`}
-              >
-                <item.icon className="w-4 h-4" />
-                {item.label}
-              </Link>
-            )
-          })}
-          <div className="border-t border-line-light mt-2 pt-2">
-            {user ? (
-              <button
-                onClick={() => { signOut(); setMobileOpen(false) }}
-                className="flex items-center gap-2 px-3 py-3 text-sm text-ink-muted w-full"
-              >
-                <LogOut className="w-4 h-4" />
-                退出登录
-              </button>
-            ) : (
-              <Link
-                to="/login"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2 px-3 py-3 text-sm text-ink-muted"
-              >
-                <LogIn className="w-4 h-4" />
-                登录 / 注册
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
     </nav>
   )
 }

@@ -158,16 +158,17 @@ export default function Jobs() {
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
                 onBlur={handleSearchBlur}
-                placeholder="搜索公司或职位..."
-                className="pl-9 pr-3 py-2 rounded-lg border border-line text-sm bg-white w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                placeholder="搜索公司、岗位、方向..."
+                className="pl-9 pr-3 h-11 rounded-lg border border-line text-sm bg-white w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
               />
             </div>
+            <div className="grid grid-cols-2 sm:flex gap-2">
             <select
               value={cityFilter}
               onChange={(e) => setCityFilter(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-line text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
+              className="px-3 h-11 rounded-lg border border-line text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
             >
-              <option value="">所有城市</option>
+              <option value="">全部城市</option>
               {cities.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
@@ -175,7 +176,7 @@ export default function Jobs() {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-line text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
+              className="px-3 h-11 rounded-lg border border-line text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
             >
               {COMPANY_TYPES.map((t) => (
                 <option key={t} value={t}>
@@ -183,18 +184,19 @@ export default function Jobs() {
                 </option>
               ))}
             </select>
+            </div>
           </div>
         </div>
 
         {/* Quick tags */}
-        <div className="flex flex-wrap gap-2 mb-5">
+        <div className="flex gap-2 overflow-x-auto mb-5">
           {QUICK_TAGS.map(({ key, icon: Icon, label }) => {
             const active = quickTag === key
             return (
               <button
                 key={key}
                 onClick={() => setQuickTag(key)}
-                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                className={`shrink-0 inline-flex items-center gap-1 px-4 min-h-[36px] rounded-full text-xs font-medium transition-colors ${
                   active
                     ? 'bg-accent text-white'
                     : 'bg-white text-ink-muted border border-line hover:border-accent/40 hover:text-accent'
@@ -268,22 +270,22 @@ export default function Jobs() {
                         </span>
                       )}
                     </div>
-                    <div className="mt-auto flex items-center gap-2">
+                    <div className="mt-auto flex gap-2">
                       {job.jd_url && (
                         <a
                           href={job.jd_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-xs text-accent hover:text-accent-hover"
+                          className="flex-1 flex items-center justify-center gap-1 h-10 rounded-lg border border-line text-sm font-medium text-ink-muted hover:bg-tag-bg transition-colors"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
-                          查看原JD
+                          查看原 JD
                         </a>
                       )}
                       <button
                         onClick={() => handleToggle(job)}
                         disabled={importingId === job.id || removingId === job.id}
-                        className={`ml-auto flex items-center gap-1 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+                        className={`flex-1 flex items-center justify-center gap-1 h-10 rounded-lg text-sm font-medium transition-colors ${
                           imported
                             ? 'bg-ok-soft text-ok hover:bg-emerald-100'
                             : importingId === job.id

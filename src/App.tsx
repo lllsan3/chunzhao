@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import { Navbar } from './components/Layout/Navbar'
+import { BottomNav } from './components/BottomNav'
 import { ToastProvider } from './components/Toast'
 import { AuthProvider } from './contexts/AuthContext'
 import { supabaseConfigError } from './lib/supabase'
@@ -15,6 +16,8 @@ const Board = lazy(() => import('./pages/Board'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Pricing = lazy(() => import('./pages/Pricing'))
 const Exam = lazy(() => import('./pages/Exam'))
+const Profile = lazy(() => import('./pages/Profile'))
+const BoardPreview = lazy(() => import('./components/BoardPreview'))
 
 function PageLoader() {
   return (
@@ -54,7 +57,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
       <ToastProvider>
-        <div className="min-h-screen bg-page">
+        <div className="min-h-screen bg-page pb-20 md:pb-0">
           <Navbar />
           <Suspense fallback={<PageLoader />}>
             <Routes>
@@ -63,13 +66,19 @@ export default function App() {
               <Route path="/jobs" element={<Jobs />} />
               <Route path="/jobs/:jobId" element={<JobDetail />} />
               <Route path="/applications/:applicationId" element={<ProtectedRoute><ApplicationDetail /></ProtectedRoute>} />
-              <Route path="/board" element={<ProtectedRoute><Board /></ProtectedRoute>} />
+              <Route path="/board" element={
+                <ProtectedRoute fallback={<BoardPreview />}>
+                  <Board />
+                </ProtectedRoute>
+              } />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/exam" element={<Exam />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          <BottomNav />
         </div>
       </ToastProvider>
       </AuthProvider>

@@ -1,14 +1,60 @@
-import { useMemo } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Kanban, Clock, Users, FileText, Send, PenLine, Award, XCircle, Loader2 } from 'lucide-react'
+import { Kanban, Clock, Users, FileText, Send, PenLine, Award, XCircle, Loader2, Building2, Briefcase, TrendingUp, CalendarClock, MapPin } from 'lucide-react'
 import { useSEO } from '../hooks/useSEO'
 import { useApplications } from '../hooks/useApplications'
 import { StatusBadge } from '../components/StatusBadge'
+import { supabase } from '../lib/supabase'
+import { getCached, setCache } from '../lib/queryCache'
 import type { ApplicationStatus } from '../lib/constants'
+
+interface JobStats {
+  total: number
+  soe_count: number
+  bigco_count: number
+  week_new: number
+  top_cities: { city: string; count: number }[]
+}
+
+function useJobStats() {
+  const [stats, setStats] = useState<JobStats | null>(() => {
+    const cached = getCached<JobStats>('job_stats', 300_000)
+    return cached?.data ?? null
+  })
+
+  useEffect(() => {
+    const cached = getCached<JobStats>('job_stats', 300_000)
+    if (cached?.fresh) return
+
+    supabase.rpc('get_job_stats').then(({ data }) => {
+      if (data) {
+        setStats(data as JobStats)
+        setCache('job_stats', data)
+      }
+    })
+  }, [])
+
+  return stats
+}
+
+function getCountdown(): { label: string; days: number } {
+  const now = new Date()
+  const month = now.getMonth() + 1
+  const year = now.getFullYear()
+  // 1-6月: 春招倒计时到6月30日, 7-12月: 秋招倒计时到12月31日
+  const target = month <= 6
+    ? new Date(year, 5, 30) // June 30
+    : new Date(year, 11, 31) // Dec 31
+  const label = month <= 6 ? '春招倒计时' : '秋招倒计时'
+  const days = Math.max(0, Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+  return { label, days }
+}
 
 export default function Dashboard() {
   useSEO({ title: '进度概览 - 校招助手', path: '/dashboard' })
   const { applications, loading } = useApplications()
+  const jobStats = useJobStats()
+  const countdown = useMemo(() => getCountdown(), [])
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -78,6 +124,76 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
+
+        {/* Job market stats */}
+        {jobStats && (
+          <div className="mb-6">
+            <h2 className="font-semibold text-ink mb-3">职位库数据看板</h2>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3 mb-4">
+              <div className="bg-white rounded-xl border border-line-light shadow-sm p-2.5 md:p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[11px] md:text-xs text-ink-muted">职位库总数</span>
+                  <Briefcase className="w-3.5 h-3.5 text-accent" />
+                </div>
+                <p className="text-lg md:text-xl font-bold text-ink">{jobStats.total.toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-xl border border-line-light shadow-sm p-2.5 md:p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[11px] md:text-xs text-ink-muted">央国企</span>
+                  <Building2 className="w-3.5 h-3.5 text-amber-500" />
+                </div>
+                <p className="text-lg md:text-xl font-bold text-ink">{jobStats.soe_count.toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-xl border border-line-light shadow-sm p-2.5 md:p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[11px] md:text-xs text-ink-muted">大厂岗位</span>
+                  <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                </div>
+                <p className="text-lg md:text-xl font-bold text-ink">{jobStats.bigco_count.toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-xl border border-line-light shadow-sm p-2.5 md:p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[11px] md:text-xs text-ink-muted">本周新增</span>
+                  <TrendingUp className="w-3.5 h-3.5 text-accent" />
+                </div>
+                <p className="text-lg md:text-xl font-bold text-ink">{jobStats.week_new.toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-xl border border-line-light shadow-sm p-2.5 md:p-4 col-span-2 md:col-span-1">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[11px] md:text-xs text-ink-muted">{countdown.label}</span>
+                  <CalendarClock className="w-3.5 h-3.5 text-red-500" />
+                </div>
+                <p className="text-lg md:text-xl font-bold text-ink">{countdown.days} <span className="text-xs font-normal text-ink-muted">天</span></p>
+              </div>
+            </div>
+
+            {/* City distribution bar chart */}
+            <div className="bg-white rounded-xl border border-line-light shadow-sm p-4">
+              <div className="flex items-center gap-1.5 mb-3">
+                <MapPin className="w-3.5 h-3.5 text-ink-muted" />
+                <span className="text-xs font-medium text-ink">热门城市分布</span>
+              </div>
+              <div className="space-y-2">
+                {jobStats.top_cities.map((c, i) => {
+                  const max = jobStats.top_cities[0]?.count || 1
+                  const pct = Math.round((c.count / max) * 100)
+                  return (
+                    <div key={c.city} className="flex items-center gap-2 text-xs">
+                      <span className="w-12 text-right text-ink-muted shrink-0">{c.city}</span>
+                      <div className="flex-1 h-5 bg-tag-bg rounded overflow-hidden">
+                        <div
+                          className={`h-full rounded transition-all ${i === 0 ? 'bg-accent' : i < 3 ? 'bg-accent/70' : 'bg-accent/40'}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="w-12 text-ink-muted shrink-0">{c.count.toLocaleString()}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
         {applications.length === 0 ? (
           /* Empty state */

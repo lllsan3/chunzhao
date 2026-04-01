@@ -44,23 +44,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Social proof */}
-      <section className="mx-4 mb-6 bg-white rounded-2xl border border-line-light shadow-sm p-5">
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="text-center sm:text-left">
-            <p className="text-lg font-bold text-ink">已有 3,000+ 同学在使用</p>
-            <p className="text-xs text-ink-muted mt-1">覆盖互联网、快消、金融、国企与职能岗方向</p>
-          </div>
-          <div className="flex gap-2 shrink-0">
-            {['复旦', '浙大', '上交', '人大'].map((name) => (
-              <span key={name} className="px-3 py-1.5 rounded-full bg-tag-bg text-ink-muted text-xs font-medium">
-                {name}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Features */}
       <section className="max-w-4xl mx-auto px-4 pb-8 md:pb-20">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

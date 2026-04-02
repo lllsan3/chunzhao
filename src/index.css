@@ -17,4 +17,7 @@
   --color-ok-soft: #edf8f2;
   --color-warn: #d38b1f;
   --color-warn-soft: #fff7e8;
+
+  /* Editorial / magazine-style serif for landing page headlines */
+  --font-editorial: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', serif;
 }

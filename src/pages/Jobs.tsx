@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { MapPin, Calendar, Plus, Check, Search, Loader2, Building2, Flame, Briefcase } from 'lucide-react'
+import { Plus, Check, Search, Loader2, Building2, Flame, Briefcase } from 'lucide-react'
 import { useSEO } from '../hooks/useSEO'
 import { useJobs } from '../hooks/useJobs'
 import { useApplications } from '../hooks/useApplications'
@@ -162,11 +162,12 @@ export default function Jobs() {
                 className="pl-9 pr-3 h-11 rounded-lg border border-line text-sm bg-white w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
               />
             </div>
-            <div className="grid grid-cols-2 sm:flex gap-2">
+            <div className="grid grid-cols-2 sm:flex gap-3">
             <select
               value={cityFilter}
               onChange={(e) => setCityFilter(e.target.value)}
-              className="px-3 h-11 rounded-lg border border-line text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
+              className="px-1 h-10 bg-transparent text-sm font-medium text-slate-800 focus:outline-none cursor-pointer appearance-none"
+              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' fill=\'%239ca3af\' viewBox=\'0 0 16 16\'%3E%3Cpath d=\'M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 4px center', paddingRight: '20px' }}
             >
               <option value="">全部城市</option>
               {cities.map((c) => (
@@ -176,7 +177,8 @@ export default function Jobs() {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-3 h-11 rounded-lg border border-line text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
+              className="px-1 h-10 bg-transparent text-sm font-medium text-slate-800 focus:outline-none cursor-pointer appearance-none"
+              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' fill=\'%239ca3af\' viewBox=\'0 0 16 16\'%3E%3Cpath d=\'M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 4px center', paddingRight: '20px' }}
             >
               {COMPANY_TYPES.map((t) => (
                 <option key={t} value={t}>
@@ -235,39 +237,38 @@ export default function Jobs() {
                     key={job.id}
                     className="bg-white rounded-md border border-gray-200 p-4 flex flex-col"
                   >
-                    {/* Company name — visual anchor: semibold, tight tracking */}
+                    {/* Company name — visual anchor */}
                     <Link
                       to={`/jobs/${job.id}`}
-                      className="text-base font-semibold text-slate-900 tracking-tight hover:text-slate-700 transition-colors line-clamp-1 mb-0.5"
+                      className="text-base font-semibold text-slate-900 tracking-tight hover:text-slate-700 transition-colors line-clamp-1 mb-1"
                     >
                       {job.company}
                     </Link>
 
-                    {/* Position title — normal weight, muted, breathing */}
-                    <p className="text-sm font-normal text-slate-600 leading-relaxed line-clamp-2 mb-2.5">{job.title}</p>
+                    {/* Positions — chipified, max 3 shown */}
+                    <div className="flex flex-wrap items-center gap-1 mb-2.5">
+                      {splitPositions(job.title).slice(0, 3).map((pos) => (
+                        <span key={pos} className="bg-gray-100/80 px-2 py-0.5 rounded-sm text-xs text-gray-700">{pos}</span>
+                      ))}
+                      {splitPositions(job.title).length > 3 && (
+                        <span className="text-xs text-gray-400 ml-0.5">+{splitPositions(job.title).length - 3} 个岗位</span>
+                      )}
+                    </div>
 
-                    {/* Metadata: delimited by thin pipes */}
-                    <div className="flex flex-wrap items-center text-xs font-normal text-slate-500 mb-3">
+                    {/* Metadata: pure text · delimited */}
+                    <div className="flex flex-wrap items-center text-xs text-slate-500 mb-3">
                       {job.city && (
-                        <>
-                          <span className="flex items-center gap-0.5">
-                            <MapPin className="w-3 h-3" />
-                            {job.city.split(',')[0].split('、')[0]}
-                          </span>
-                        </>
+                        <span>{job.city.split(',')[0].split('、')[0]}</span>
                       )}
-                      {job.city && job.deadline && <span className="text-slate-300 px-1.5">|</span>}
+                      {job.city && job.deadline && <span className="text-slate-300 mx-1.5">·</span>}
                       {job.deadline && (
-                        <span className="flex items-center gap-0.5">
-                          <Calendar className="w-3 h-3" />
-                          {job.deadline}
-                        </span>
+                        <span>{job.deadline}</span>
                       )}
-                      {job.tags.length > 0 && (job.city || job.deadline) && <span className="text-slate-300 px-1.5">|</span>}
+                      {job.tags.length > 0 && (job.city || job.deadline) && <span className="text-slate-300 mx-1.5">·</span>}
                       {job.tags.slice(0, 2).map((tag, idx) => (
                         <span key={tag}>
-                          {idx > 0 && <span className="text-slate-300 px-0.5">·</span>}
-                          <span className="text-slate-500">{tag}</span>
+                          {idx > 0 && <span className="text-slate-300 mx-1">·</span>}
+                          {tag}
                         </span>
                       ))}
                     </div>
@@ -359,4 +360,16 @@ export default function Jobs() {
       )}
     </div>
   )
+}
+
+/** Split a messy position string into individual position names */
+function splitPositions(title: string): string[] {
+  if (!title) return []
+  // Split by common delimiters: comma, Chinese comma, semicolon, slash, newline, spaces between CJK chars
+  const parts = title
+    .split(/[,，;；、/\n]+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length >= 2 && s.length <= 20)
+  // If no split happened (single title), return as-is
+  return parts.length > 0 ? parts : [title.slice(0, 20)]
 }

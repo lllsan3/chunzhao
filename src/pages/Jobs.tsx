@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { MapPin, Calendar, ExternalLink, Plus, Check, Search, Loader2, Building2, Flame, Briefcase } from 'lucide-react'
+import { MapPin, Calendar, Plus, Check, Search, Loader2, Building2, Flame, Briefcase } from 'lucide-react'
 import { useSEO } from '../hooks/useSEO'
 import { useJobs } from '../hooks/useJobs'
 import { useApplications } from '../hooks/useApplications'
@@ -136,7 +136,7 @@ export default function Jobs() {
   }
 
   return (
-    <div className="min-h-screen bg-page">
+    <div className="min-h-screen bg-[#F9F9F6]">
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-4">
@@ -227,76 +227,73 @@ export default function Jobs() {
           <div className="text-center py-20 text-ink-muted/70">暂无匹配职位</div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {filtered.map((job) => {
                 const imported = importedMap.has(job.id)
                 return (
                   <div
                     key={job.id}
-                    className="bg-white rounded-2xl border border-line-light shadow-sm p-5 flex flex-col"
+                    className="bg-white rounded-md border border-gray-200 p-4 flex flex-col"
                   >
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <Link
-                        to={`/jobs/${job.id}`}
-                        className="font-semibold text-ink hover:text-accent transition-colors line-clamp-1"
-                      >
-                        {job.title}
-                      </Link>
-                      {job.tags.length > 0 && (
-                        <div className="flex gap-1 shrink-0">
-                          {job.tags.slice(0, 2).map((tag) => (
-                            <span
-                              key={tag}
-                              className="px-2 py-0.5 rounded-full bg-tag-bg text-ink-muted text-xs"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-sm text-ink-muted mb-3">{job.company}</p>
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-ink-muted mb-4">
+                    {/* Company name — visual anchor */}
+                    <Link
+                      to={`/jobs/${job.id}`}
+                      className="text-base font-semibold text-gray-900 hover:text-[#1C1C1C] transition-colors line-clamp-1 mb-0.5"
+                    >
+                      {job.company}
+                    </Link>
+
+                    {/* Position title — secondary, 2 lines max */}
+                    <p className="text-sm text-gray-700 line-clamp-2 mb-2">{job.title}</p>
+
+                    {/* Metadata: location, deadline, tags */}
+                    <div className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 mb-3">
                       {job.city && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5" />
-                          {job.city}
+                        <span className="flex items-center gap-0.5">
+                          <MapPin className="w-3 h-3" />
+                          {job.city.split(',')[0].split('、')[0]}
                         </span>
                       )}
                       {job.deadline && (
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5" />
-                          截止: {job.deadline}
+                        <span className="flex items-center gap-0.5">
+                          <Calendar className="w-3 h-3" />
+                          {job.deadline}
                         </span>
                       )}
+                      {job.tags.slice(0, 2).map((tag) => (
+                        <span key={tag} className="bg-gray-100 px-2 py-0.5 rounded-sm text-gray-500">
+                          {tag}
+                        </span>
+                      ))}
                     </div>
-                    <div className="mt-auto flex gap-2">
+
+                    {/* Actions — ghost button pattern */}
+                    <div className="mt-auto flex items-center gap-3">
                       {job.jd_url && (
                         <a
                           href={job.jd_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 flex items-center justify-center gap-1 h-10 rounded-lg border border-line text-sm font-medium text-ink-muted hover:bg-tag-bg transition-colors"
+                          className="text-sm text-gray-400 hover:text-gray-900 underline underline-offset-4 decoration-gray-200 hover:decoration-gray-900 transition-colors duration-200"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          查看原 JD
+                          查看 JD
                         </a>
                       )}
                       <button
                         onClick={() => handleToggle(job)}
                         disabled={importingId === job.id || removingId === job.id}
-                        className={`flex-1 flex items-center justify-center gap-1 h-10 rounded-lg text-sm font-medium transition-colors ${
+                        className={`ml-auto flex items-center gap-1 px-3 py-1.5 rounded-md text-sm transition-colors duration-200 ${
                           imported
-                            ? 'bg-ok-soft text-ok hover:bg-emerald-100'
+                            ? 'text-emerald-600 border border-emerald-200 bg-emerald-50/50'
                             : importingId === job.id
-                              ? 'bg-brand-hover text-white cursor-wait'
-                              : 'bg-brand text-white hover:bg-brand-hover'
+                              ? 'text-white bg-gray-800'
+                              : 'text-gray-600 border border-gray-300 bg-transparent hover:bg-[#1C1C1C] hover:text-white hover:border-[#1C1C1C]'
                         }`}
                       >
                         {importingId === job.id ? (
                           <>
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            收藏中...
+                            收藏中
                           </>
                         ) : imported ? (
                           <>
@@ -306,7 +303,7 @@ export default function Jobs() {
                         ) : (
                           <>
                             <Plus className="w-3.5 h-3.5" />
-                            导入申请池
+                            导入
                           </>
                         )}
                       </button>

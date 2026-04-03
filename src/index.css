@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Global font stack: modern Chinese sans-serif */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", STHeiti, "Microsoft Yahei", Tahoma, Simsun, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 @theme {
   --color-page: #f7f9fc;
   --color-brand: #18243d;

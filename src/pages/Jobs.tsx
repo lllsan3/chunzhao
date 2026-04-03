@@ -235,46 +235,51 @@ export default function Jobs() {
                     key={job.id}
                     className="bg-white rounded-md border border-gray-200 p-4 flex flex-col"
                   >
-                    {/* Company name — visual anchor */}
+                    {/* Company name — visual anchor: semibold, tight tracking */}
                     <Link
                       to={`/jobs/${job.id}`}
-                      className="text-base font-semibold text-gray-900 hover:text-[#1C1C1C] transition-colors line-clamp-1 mb-0.5"
+                      className="text-base font-semibold text-slate-900 tracking-tight hover:text-slate-700 transition-colors line-clamp-1 mb-0.5"
                     >
                       {job.company}
                     </Link>
 
-                    {/* Position title — secondary, 2 lines max */}
-                    <p className="text-sm text-gray-700 line-clamp-2 mb-2">{job.title}</p>
+                    {/* Position title — normal weight, muted, breathing */}
+                    <p className="text-sm font-normal text-slate-600 leading-relaxed line-clamp-2 mb-2.5">{job.title}</p>
 
-                    {/* Metadata: location, deadline, tags */}
-                    <div className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 mb-3">
+                    {/* Metadata: delimited by thin pipes */}
+                    <div className="flex flex-wrap items-center text-xs font-normal text-slate-500 mb-3">
                       {job.city && (
-                        <span className="flex items-center gap-0.5">
-                          <MapPin className="w-3 h-3" />
-                          {job.city.split(',')[0].split('、')[0]}
-                        </span>
+                        <>
+                          <span className="flex items-center gap-0.5">
+                            <MapPin className="w-3 h-3" />
+                            {job.city.split(',')[0].split('、')[0]}
+                          </span>
+                        </>
                       )}
+                      {job.city && job.deadline && <span className="text-slate-300 px-1.5">|</span>}
                       {job.deadline && (
                         <span className="flex items-center gap-0.5">
                           <Calendar className="w-3 h-3" />
                           {job.deadline}
                         </span>
                       )}
-                      {job.tags.slice(0, 2).map((tag) => (
-                        <span key={tag} className="bg-gray-100 px-2 py-0.5 rounded-sm text-gray-500">
-                          {tag}
+                      {job.tags.length > 0 && (job.city || job.deadline) && <span className="text-slate-300 px-1.5">|</span>}
+                      {job.tags.slice(0, 2).map((tag, idx) => (
+                        <span key={tag}>
+                          {idx > 0 && <span className="text-slate-300 px-0.5">·</span>}
+                          <span className="text-slate-500">{tag}</span>
                         </span>
                       ))}
                     </div>
 
-                    {/* Actions — ghost button pattern */}
+                    {/* Actions */}
                     <div className="mt-auto flex items-center gap-3">
                       {job.jd_url && (
                         <a
                           href={job.jd_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-gray-400 hover:text-gray-900 underline underline-offset-4 decoration-gray-200 hover:decoration-gray-900 transition-colors duration-200"
+                          className="text-sm font-normal text-slate-400 hover:text-slate-900 underline underline-offset-4 decoration-slate-200 hover:decoration-slate-900 transition-colors duration-200"
                         >
                           查看 JD
                         </a>
@@ -282,12 +287,12 @@ export default function Jobs() {
                       <button
                         onClick={() => handleToggle(job)}
                         disabled={importingId === job.id || removingId === job.id}
-                        className={`ml-auto flex items-center gap-1 px-3 py-1.5 rounded-md text-sm transition-colors duration-200 ${
+                        className={`ml-auto flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-normal transition-colors duration-200 ${
                           imported
                             ? 'text-emerald-600 border border-emerald-200 bg-emerald-50/50'
                             : importingId === job.id
-                              ? 'text-white bg-gray-800'
-                              : 'text-gray-600 border border-gray-300 bg-transparent hover:bg-[#1C1C1C] hover:text-white hover:border-[#1C1C1C]'
+                              ? 'text-white bg-slate-800'
+                              : 'text-slate-600 border border-slate-300 bg-transparent hover:bg-slate-900 hover:text-white hover:border-slate-900'
                         }`}
                       >
                         {importingId === job.id ? (

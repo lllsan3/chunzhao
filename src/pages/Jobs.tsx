@@ -229,52 +229,71 @@ export default function Jobs() {
           <div className="text-center py-20 text-ink-muted/70">暂无匹配职位</div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
               {filtered.map((job) => {
                 const imported = importedMap.has(job.id)
+                const positions = splitPositions(job.title)
                 return (
                   <div
                     key={job.id}
-                    className="bg-white rounded-md border border-gray-200 p-4 flex flex-col"
+                    className="relative bg-white rounded-md border border-gray-200 px-3 py-2.5 md:p-4 flex flex-col"
                   >
-                    {/* Company name — visual anchor */}
+                    {/* Mobile: import button absolute top-right */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleToggle(job) }}
+                      disabled={importingId === job.id || removingId === job.id}
+                      className={`md:hidden absolute top-2.5 right-3 flex items-center gap-0.5 px-2 py-1 rounded text-[10px] font-medium transition-colors duration-200 ${
+                        imported
+                          ? 'text-emerald-600 bg-emerald-50'
+                          : importingId === job.id
+                            ? 'text-white bg-slate-700'
+                            : 'text-slate-500 bg-slate-100 active:bg-slate-900 active:text-white'
+                      }`}
+                    >
+                      {importingId === job.id ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : imported ? (
+                        <><Check className="w-3 h-3" />已导入</>
+                      ) : (
+                        <><Plus className="w-3 h-3" />导入</>
+                      )}
+                    </button>
+
+                    {/* Company name */}
                     <Link
                       to={`/jobs/${job.id}`}
-                      className="text-base font-semibold text-slate-900 tracking-tight hover:text-slate-700 transition-colors line-clamp-1 mb-1"
+                      className="text-sm md:text-base font-semibold text-slate-900 tracking-tight hover:text-slate-700 transition-colors line-clamp-1 pr-16 md:pr-0 mb-0.5 md:mb-1"
                     >
                       {job.company}
                     </Link>
 
-                    {/* Positions — chipified, max 3 shown */}
-                    <div className="flex flex-wrap items-center gap-1 mb-2.5">
-                      {splitPositions(job.title).slice(0, 3).map((pos) => (
-                        <span key={pos} className="bg-gray-100/80 px-2 py-0.5 rounded-sm text-xs text-gray-700">{pos}</span>
+                    {/* Positions — compact chips */}
+                    <div className="flex flex-wrap items-center gap-1 mb-1.5 md:mb-2.5">
+                      {positions.slice(0, 2).map((pos) => (
+                        <span key={pos} className="bg-gray-100/80 px-1.5 py-0.5 md:px-2 rounded-sm text-[10px] md:text-xs leading-tight text-gray-700">{pos}</span>
                       ))}
-                      {splitPositions(job.title).length > 3 && (
-                        <span className="text-xs text-gray-400 ml-0.5">+{splitPositions(job.title).length - 3} 个岗位</span>
+                      {positions.length > 2 && (
+                        <span className="text-[10px] md:text-xs text-gray-400">+{positions.length - 2}</span>
                       )}
                     </div>
 
-                    {/* Metadata: pure text · delimited */}
-                    <div className="flex flex-wrap items-center text-xs text-slate-500 mb-3">
+                    {/* Metadata — inline with button on desktop */}
+                    <div className="flex items-center text-[10px] md:text-xs text-slate-500 leading-none md:mb-3">
                       {job.city && (
                         <span>{job.city.split(',')[0].split('、')[0]}</span>
                       )}
-                      {job.city && job.deadline && <span className="text-slate-300 mx-1.5">·</span>}
+                      {job.city && job.deadline && <span className="text-slate-300 mx-1 md:mx-1.5">·</span>}
                       {job.deadline && (
                         <span>{job.deadline}</span>
                       )}
-                      {job.tags.length > 0 && (job.city || job.deadline) && <span className="text-slate-300 mx-1.5">·</span>}
-                      {job.tags.slice(0, 2).map((tag, idx) => (
-                        <span key={tag}>
-                          {idx > 0 && <span className="text-slate-300 mx-1">·</span>}
-                          {tag}
-                        </span>
+                      {job.tags.length > 0 && (job.city || job.deadline) && <span className="text-slate-300 mx-1 md:mx-1.5">·</span>}
+                      {job.tags.slice(0, 1).map((tag) => (
+                        <span key={tag}>{tag}</span>
                       ))}
                     </div>
 
-                    {/* Actions */}
-                    <div className="mt-auto flex items-center gap-3">
+                    {/* Desktop-only actions row */}
+                    <div className="hidden md:flex mt-auto items-center gap-3 pt-1">
                       {job.jd_url && (
                         <a
                           href={job.jd_url}

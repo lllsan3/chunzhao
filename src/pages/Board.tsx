@@ -8,13 +8,13 @@ import {
 import { useDroppable } from '@dnd-kit/core'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
-import { MapPin, Search, Plus, X, Loader2, Trash2 } from 'lucide-react'
+import { Search, Plus, X, Loader2, Trash2 } from 'lucide-react'
 import { trackFailure, trackSuccess } from '../lib/errorTracker'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { timeAgo } from '../lib/time'
 import { useApplications, type Application } from '../hooks/useApplications'
 import { useSubscription } from '../hooks/useSubscription'
-import { STATUS_MAP, STATUS_LIST, STATUS_COLORS } from '../lib/constants'
+import { STATUS_MAP, STATUS_LIST } from '../lib/constants'
 import type { ApplicationStatus } from '../lib/constants'
 import { useToast } from '../components/Toast'
 import { PaywallModal } from '../components/PaywallModal'
@@ -67,130 +67,106 @@ export default function Board() {
   }
 
   if (loading) return (
-    <div className="min-h-screen bg-page flex items-center justify-center text-ink-muted/70">
+    <div className="min-h-screen bg-[#F9F9F6] flex items-center justify-center text-slate-400">
       <div className="text-center">
-        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-        看看你的进度怎么样了...
+        <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
+        <p className="text-sm">加载中...</p>
       </div>
     </div>
   )
 
-
   return (
-    <div className="min-h-screen bg-page">
-      <div className="max-w-full mx-auto px-4 py-6">
+    <div className="min-h-screen bg-[#F9F9F6]">
+      <div className="max-w-full mx-auto px-4 md:px-6 py-4 md:py-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-5">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
           <div>
-            {/* Desktop: static title. Mobile: show current tab status + count */}
-            <h1 className="text-2xl font-bold text-ink">
+            <h1 className="text-lg md:text-2xl font-semibold text-slate-900 tracking-tight">
               <span className="hidden md:inline">我的投递</span>
               <span className="md:hidden">{mobileTab === 'all' ? `全部（${filtered.length}）` : `${STATUS_MAP[mobileTab]}（${grouped[mobileTab].length}）`}</span>
             </h1>
-            <p className="text-sm text-ink-muted mt-1 hidden md:block">拖拽卡片更新进度，左右滑动查看更多</p>
-            <p className="text-sm text-ink-muted mt-1 md:hidden">切换状态查看不同阶段的申请</p>
+            <p className="text-xs text-slate-500 mt-0.5 hidden md:block">拖拽卡片更新进度</p>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted/70" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="搜索公司或职位..."
-                className="pl-9 pr-3 py-2 rounded-lg border border-line text-sm bg-white w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-accent/20"
+                placeholder="搜索..."
+                className="pl-8 pr-3 h-9 md:h-10 rounded-md border border-gray-200 text-sm bg-white w-36 sm:w-48 focus:outline-none focus:ring-1 focus:ring-slate-300 focus:border-slate-300"
               />
             </div>
             <button
               onClick={() => {
-                if (isAtFreeLimit && !membership.isMember) {
-                  setShowPaywall(true)
-                } else {
-                  setShowAddModal(true)
-                }
+                if (isAtFreeLimit && !membership.isMember) setShowPaywall(true)
+                else setShowAddModal(true)
               }}
-              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand-hover transition-colors shrink-0"
+              className="inline-flex items-center gap-1 px-3 h-9 md:h-10 rounded-md text-sm font-medium text-slate-600 border border-slate-300 bg-transparent hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-colors shrink-0"
             >
               <Plus className="w-4 h-4" />
-              手动添加
+              <span className="hidden sm:inline">手动添加</span>
             </button>
           </div>
         </div>
 
-        {/* Desktop: kanban columns */}
+        {/* ═══ Desktop: Editorial Kanban ═══ */}
         <div className="hidden md:block">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <div className="flex gap-2 overflow-x-auto pb-2 board-scroll items-start">
-              {STATUS_LIST.map((status) => (
-                <KanbanColumn key={status} status={status} items={grouped[status]} onDelete={(app) => setDeleteConfirm({ id: app.id, title: `${app.company} · ${app.title}` })} />
+            <div className="flex overflow-x-auto pb-2 board-scroll items-start">
+              {STATUS_LIST.map((status, i) => (
+                <KanbanColumn
+                  key={status}
+                  status={status}
+                  items={grouped[status]}
+                  isLast={i === STATUS_LIST.length - 1}
+                  onDelete={(app) => setDeleteConfirm({ id: app.id, title: `${app.company} · ${app.title}` })}
+                />
               ))}
             </div>
           </DndContext>
         </div>
 
-        {/* Mobile: overview bar + tab switcher */}
+        {/* ═══ Mobile: Editorial text tabs + compact cards ═══ */}
         <div className="md:hidden">
-          {/* Status overview bar */}
-          <div className="flex flex-wrap gap-x-3 gap-y-1 px-1 py-2.5 mb-3 bg-white rounded-xl border border-line-light">
-            {STATUS_LIST.map((status) => {
-              const count = grouped[status].length
-              const active = mobileTab === status
-              return (
-                <span
-                  key={status}
-                  className={`text-[11px] transition-colors ${
-                    active ? 'font-semibold text-ink' : 'text-ink-muted/70'
-                  }`}
-                >
-                  {STATUS_MAP[status]}{' '}
-                  <span className={`inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full text-[10px] font-medium ${
-                    count > 0
-                      ? active ? 'bg-accent text-white' : 'bg-tag-bg text-ink-muted'
-                      : 'bg-tag-bg text-line'
-                  }`}>
-                    {count}
-                  </span>
-                </span>
-              )
-            })}
-          </div>
-
-          {/* Tab switcher */}
-          <div className="flex gap-1.5 overflow-x-auto pb-3 mb-4">
+          {/* Text-flow tabs — no pills, no bg blocks */}
+          <div className="flex overflow-x-auto whitespace-nowrap gap-5 pb-2 mb-3 border-b border-gray-200">
             <button
               onClick={() => setMobileTab('all')}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              className={`shrink-0 pb-2 text-sm transition-colors ${
                 mobileTab === 'all'
-                  ? 'bg-accent text-white shadow-sm'
-                  : 'bg-tag-bg text-ink-muted/70 hover:text-ink-muted'
+                  ? 'text-slate-900 font-medium border-b-2 border-slate-900 -mb-px'
+                  : 'text-slate-400'
               }`}
             >
-              全部 ({filtered.length})
+              全部 {filtered.length}
             </button>
             {STATUS_LIST.map((status) => {
               const active = mobileTab === status
-              const colors = STATUS_COLORS[status]
               const count = grouped[status].length
               return (
                 <button
                   key={status}
                   onClick={() => setMobileTab(status)}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  className={`shrink-0 pb-2 text-sm transition-colors ${
                     active
-                      ? `${colors.bg} ${colors.text} shadow-sm ring-1 ring-current/20`
-                      : 'bg-tag-bg text-ink-muted/70 hover:text-ink-muted'
+                      ? 'text-slate-900 font-medium border-b-2 border-slate-900 -mb-px'
+                      : 'text-slate-400'
                   }`}
                 >
-                  {STATUS_MAP[status]} {count > 0 && `(${count})`}
+                  {STATUS_MAP[status]} {count > 0 && count}
                 </button>
               )
             })}
           </div>
-          <div className="space-y-3">
+
+          {/* Compact card list */}
+          <div className="space-y-1.5">
             {(() => {
               const list = mobileTab === 'all' ? filtered : grouped[mobileTab]
               return list.length === 0 ? (
-                <div className="text-center py-12 text-ink-muted/70 text-sm">暂无岗位</div>
+                <div className="text-center py-10 text-slate-400 text-sm">暂无岗位</div>
               ) : (
                 list.map((app) => (
                   <MobileCard key={app.id} app={app} onDelete={() => setDeleteConfirm({ id: app.id, title: `${app.company} · ${app.title}` })} />
@@ -218,7 +194,6 @@ export default function Board() {
         />
       )}
 
-      {/* Add modal */}
       {showAddModal && (
         <ManualAddModal
           onClose={() => setShowAddModal(false)}
@@ -227,7 +202,7 @@ export default function Board() {
             if (error) {
               if (error.message?.includes('FREE_LIMIT_REACHED')) {
                 setShowPaywall(true)
-                return true // close modal
+                return true
               }
               toast('error', trackFailure('manualAdd', '添加失败了，再试一次'))
               return false
@@ -239,7 +214,6 @@ export default function Board() {
         />
       )}
 
-      {/* Thin scrollbar styles */}
       <style>{`
         .board-scroll::-webkit-scrollbar { height: 4px; }
         .board-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -251,29 +225,31 @@ export default function Board() {
   )
 }
 
-function KanbanColumn({ status, items, onDelete }: { status: ApplicationStatus; items: Application[]; onDelete: (app: Application) => void }) {
+/* ═══════════ Desktop: Editorial Kanban Column ═══════════ */
+
+function KanbanColumn({ status, items, isLast, onDelete }: {
+  status: ApplicationStatus; items: Application[]; isLast: boolean; onDelete: (app: Application) => void
+}) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
-  const colors = STATUS_COLORS[status]
 
   return (
     <div
       ref={setNodeRef}
-      className={`shrink-0 w-[200px] rounded-xl p-2.5 min-h-[300px] transition-colors ${
-        isOver ? 'bg-accent-soft ring-1 ring-accent/30' : colors.bg + '/40'
-      }`}
-      style={{ backgroundColor: isOver ? undefined : `color-mix(in srgb, ${getColorHex(status)} 8%, #f8fafc)` }}
+      className={`shrink-0 w-[200px] min-h-[300px] px-2 pt-2 pb-4 transition-colors ${
+        !isLast ? 'border-r border-gray-200' : ''
+      } ${isOver ? 'bg-slate-100/60' : ''}`}
     >
-      <div className="flex items-center gap-1.5 mb-2 px-0.5">
-        <span className={`w-2 h-2 rounded-full ${colors.bg.replace('bg-', 'bg-')}`}
-          style={{ backgroundColor: getColorHex(status) }} />
-        <span className="text-xs font-medium text-ink">{STATUS_MAP[status]}</span>
+      {/* Column header — minimal text */}
+      <div className="flex items-center gap-1.5 mb-3 px-0.5">
+        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getColorHex(status) }} />
+        <span className="text-xs font-medium text-slate-700">{STATUS_MAP[status]}</span>
         {items.length > 0 && (
-          <span className="text-[10px] text-ink-muted/70 ml-auto">{items.length}</span>
+          <span className="text-[10px] text-slate-400 ml-auto">{items.length}</span>
         )}
       </div>
       <div className="space-y-1.5">
         {items.length === 0 ? (
-          <p className="text-[11px] text-line text-center py-6">暂无岗位</p>
+          <p className="text-[10px] text-slate-300 text-center py-6">拖到此处</p>
         ) : (
           items.map((app) => <DraggableCard key={app.id} app={app} onDelete={() => onDelete(app)} />)
         )}
@@ -281,6 +257,8 @@ function KanbanColumn({ status, items, onDelete }: { status: ApplicationStatus; 
     </div>
   )
 }
+
+/* ═══════════ Desktop: Draggable Card ═══════════ */
 
 function DraggableCard({ app, onDelete }: { app: Application; onDelete: () => void }) {
   const navigate = useNavigate()
@@ -292,11 +270,9 @@ function DraggableCard({ app, onDelete }: { app: Application; onDelete: () => vo
     opacity: isDragging ? 0.5 : 1,
   }
 
-  // Track whether a drag actually happened
   if (isDragging) didDrag.current = true
 
   const handleClick = () => {
-    // Only navigate if no drag occurred
     if (didDrag.current) {
       didDrag.current = false
       return
@@ -311,60 +287,67 @@ function DraggableCard({ app, onDelete }: { app: Application; onDelete: () => vo
       {...listeners}
       {...attributes}
       onClick={handleClick}
-      className="group relative bg-white rounded-lg border border-line-light/80 shadow-[0_1px_2px_rgba(0,0,0,0.04)] px-2.5 py-2 hover:shadow-sm transition-shadow cursor-grab active:cursor-grabbing"
+      className="group relative bg-white rounded-md border border-gray-200 shadow-none px-2.5 py-2 cursor-grab active:cursor-grabbing hover:border-gray-300 transition-colors"
     >
       <button
         onClick={(e) => { e.stopPropagation(); onDelete() }}
-        className="absolute top-1.5 right-1.5 w-5 h-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-50 text-ink-muted/70 hover:text-red-500 transition-all"
+        className="absolute top-1.5 right-1.5 w-5 h-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all"
         title="移除"
       >
         <Trash2 className="w-3 h-3" />
       </button>
-      <p className="font-medium text-[13px] text-ink line-clamp-1 pr-4">{app.title}</p>
-      <p className="text-[11px] text-ink-muted mt-0.5">{app.company}</p>
-      <div className="flex items-center gap-2 mt-1 text-[11px] text-ink-muted/70">
-        {app.city && (
-          <span className="flex items-center gap-0.5">
-            <MapPin className="w-2.5 h-2.5" />
-            {app.city}
-          </span>
-        )}
-        {app.updated_at && (
-          <span className="ml-auto">{timeAgo(app.updated_at)}</span>
-        )}
+      <p className="font-medium text-[13px] text-slate-900 line-clamp-1 pr-4">{app.company}</p>
+      <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">{app.title}</p>
+      <div className="flex items-center mt-1 text-[10px] text-slate-400">
+        {app.city && <span>{app.city.split(',')[0].split('、')[0]}</span>}
+        {app.city && app.updated_at && <span className="text-slate-300 mx-1">·</span>}
+        {app.updated_at && <span className="ml-auto">{timeAgo(app.updated_at)}</span>}
       </div>
     </div>
   )
 }
 
+/* ═══════════ Mobile: Compact Card ═══════════ */
+
 function MobileCard({ app, onDelete }: { app: Application; onDelete: () => void }) {
+  const positions = app.title.split(/[,，;；、/]+/).map(s => s.trim()).filter(s => s.length >= 2 && s.length <= 20)
+
   return (
-    <div className="relative bg-white rounded-2xl border border-line-light shadow-sm p-4">
-      <Link to={`/applications/${app.id}`} className="block">
-        <p className="font-medium text-ink pr-6">{app.title}</p>
-        <p className="text-sm text-ink-muted mt-0.5">{app.company}</p>
-        <div className="flex items-center gap-3 mt-2 text-xs text-ink-muted/70">
-          {app.city && (
-            <span className="flex items-center gap-0.5">
-              <MapPin className="w-3 h-3" />
-              {app.city}
-            </span>
-          )}
-          {app.updated_at && (
-            <span className="ml-auto">{timeAgo(app.updated_at)}</span>
-          )}
-        </div>
-      </Link>
+    <div className="relative bg-white rounded-md border border-gray-200 shadow-none px-3 py-2.5">
+      {/* Delete button */}
       <button
         onClick={onDelete}
-        className="absolute top-3 right-3 w-7 h-7 rounded-lg flex items-center justify-center text-ink-muted/70 hover:bg-red-50 hover:text-red-500 transition-colors"
-        title="移除"
+        className="absolute top-2.5 right-2.5 w-6 h-6 rounded flex items-center justify-center text-slate-300 active:text-red-500 transition-colors"
       >
-        <Trash2 className="w-3.5 h-3.5" />
+        <Trash2 className="w-3 h-3" />
       </button>
+
+      <Link to={`/applications/${app.id}`} className="block pr-7">
+        {/* Company — anchor */}
+        <p className="text-sm font-semibold text-slate-900 tracking-tight line-clamp-1">{app.company}</p>
+
+        {/* Position chips */}
+        <div className="flex flex-wrap items-center gap-1 mt-1">
+          {positions.slice(0, 2).map((pos) => (
+            <span key={pos} className="bg-gray-100/80 px-1.5 py-0.5 rounded-sm text-[10px] leading-tight text-gray-700">{pos}</span>
+          ))}
+          {positions.length > 2 && (
+            <span className="text-[10px] text-gray-400">+{positions.length - 2}</span>
+          )}
+        </div>
+
+        {/* Metadata — middot delimited */}
+        <div className="flex items-center mt-1.5 text-[10px] text-slate-500 leading-none">
+          {app.city && <span>{app.city.split(',')[0].split('、')[0]}</span>}
+          {app.city && app.updated_at && <span className="text-slate-300 mx-1">·</span>}
+          {app.updated_at && <span>{timeAgo(app.updated_at)}</span>}
+        </div>
+      </Link>
     </div>
   )
 }
+
+/* ═══════════ Manual Add Modal ═══════════ */
 
 function ManualAddModal({
   onClose,
@@ -388,7 +371,7 @@ function ManualAddModal({
       setUrlError('')
       return true
     } catch {
-      setUrlError('请输入有效的 URL（以 http:// 或 https:// 开头）')
+      setUrlError('请输入有效的 URL')
       return false
     }
   }
@@ -413,85 +396,47 @@ function ManualAddModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
-      <div
-        className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-ink">手动添加职位</h2>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-tag-bg text-ink-muted/70">
+      <div className="relative bg-white rounded-md shadow-xl w-full max-w-md p-5" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-semibold text-slate-900">手动添加</h2>
+          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-ink-muted mb-1">职位名称 *</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="如：前端开发工程师"
-              required
-              className="w-full px-3 py-2.5 rounded-xl border border-line text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-            />
+            <label className="block text-xs text-slate-500 mb-1">职位名称 *</label>
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="如：前端开发工程师" required
+              className="w-full px-3 py-2 rounded-md border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-slate-300" />
           </div>
-
           <div>
-            <label className="block text-xs font-medium text-ink-muted mb-1">公司 *</label>
-            <input
-              type="text"
-              value={company}
-              onChange={(e) => setCompany(e.target.value)}
-              placeholder="如：腾讯"
-              required
-              className="w-full px-3 py-2.5 rounded-xl border border-line text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-            />
+            <label className="block text-xs text-slate-500 mb-1">公司 *</label>
+            <input type="text" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="如：腾讯" required
+              className="w-full px-3 py-2 rounded-md border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-slate-300" />
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs font-medium text-ink-muted mb-1">城市</label>
-              <input
-                type="text"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="如：深圳"
-                className="w-full px-3 py-2.5 rounded-xl border border-line text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-              />
+              <label className="block text-xs text-slate-500 mb-1">城市</label>
+              <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="深圳"
+                className="w-full px-3 py-2 rounded-md border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-slate-300" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-ink-muted mb-1">截止日期</label>
-              <input
-                type="text"
-                value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
-                placeholder="如：2026.04.30"
-                className="w-full px-3 py-2.5 rounded-xl border border-line text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-              />
+              <label className="block text-xs text-slate-500 mb-1">截止日期</label>
+              <input type="text" value={deadline} onChange={(e) => setDeadline(e.target.value)} placeholder="2026.04.30"
+                className="w-full px-3 py-2 rounded-md border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-slate-300" />
             </div>
           </div>
-
           <div>
-            <label className="block text-xs font-medium text-ink-muted mb-1">JD 链接</label>
-            <input
-              type="text"
-              value={jdUrl}
+            <label className="block text-xs text-slate-500 mb-1">JD 链接</label>
+            <input type="text" value={jdUrl}
               onChange={(e) => { setJdUrl(e.target.value); if (urlError) validateUrl(e.target.value) }}
-              onBlur={() => validateUrl(jdUrl)}
-              placeholder="https://..."
-              className={`w-full px-3 py-2.5 rounded-xl border text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent/20 ${
-                urlError ? 'border-red-300 focus:border-red-500' : 'border-line focus:border-accent'
-              }`}
-            />
+              onBlur={() => validateUrl(jdUrl)} placeholder="https://..."
+              className={`w-full px-3 py-2 rounded-md border text-sm focus:outline-none focus:ring-1 ${urlError ? 'border-red-300 focus:ring-red-200' : 'border-gray-200 focus:ring-slate-300'}`} />
             {urlError && <p className="text-xs text-red-500 mt-1">{urlError}</p>}
           </div>
-
-          <button
-            type="submit"
-            disabled={submitting || !title.trim() || !company.trim()}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand text-white text-sm font-medium hover:bg-brand-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
+          <button type="submit" disabled={submitting || !title.trim() || !company.trim()}
+            className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-md text-sm font-medium text-slate-600 border border-slate-300 hover:bg-slate-900 hover:text-white hover:border-slate-900 disabled:opacity-40 transition-colors">
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
             {submitting ? '添加中...' : '添加到看板'}
           </button>

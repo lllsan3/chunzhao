@@ -1,4 +1,3 @@
-import { Fragment } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Import, Kanban, Bell } from 'lucide-react'
 import { useSEO } from '../hooks/useSEO'
@@ -80,7 +79,7 @@ export default function Home() {
           {/* ─── Mobile: editorial index list ─── */}
           <div className="md:hidden space-y-0">
             {features.map((f, i) => (
-              <div key={i} className="border-t border-[#1C1C1C] pt-4 pb-5">
+              <div key={i} className="group border-t border-[#1C1C1C] pt-4 pb-5">
                 <div className="flex items-start gap-3">
                   <div className={`w-8 h-8 rounded-sm ${f.iconBg} flex items-center justify-center shrink-0 mt-0.5`}>
                     <f.icon className="w-4 h-4 text-white" />
@@ -90,9 +89,10 @@ export default function Home() {
                     <p className="text-sm text-[#1C1C1C]/50 leading-relaxed line-clamp-2">{f.desc}</p>
                     <Link
                       to={f.to}
-                      className="mt-2 inline-block text-sm text-[#1C1C1C]/70 underline underline-offset-4 decoration-[#1C1C1C]/20 hover:decoration-[#1C1C1C] hover:text-[#1C1C1C] transition-colors duration-300"
+                      className="mt-2 inline-flex items-center gap-1 text-sm text-[#1C1C1C]/70 underline underline-offset-4 decoration-[#1C1C1C]/15 hover:decoration-[#1C1C1C] hover:text-[#1C1C1C] transition-all duration-300"
                     >
                       {f.link}
+                      <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">›</span>
                     </Link>
                   </div>
                 </div>
@@ -100,33 +100,31 @@ export default function Home() {
             ))}
           </div>
 
-          {/* ─── Desktop: asymmetric 5-1-3-1-2 grid with column dividers ─── */}
-          <div className="hidden md:grid md:grid-cols-12 gap-0">
+          {/* ─── Desktop: 3-col with vertical dividers + middle column offset ─── */}
+          <div className="hidden md:grid md:grid-cols-3 gap-0">
             {features.map((f, i) => {
               const Icon = f.icon
-              const colSpan = i === 0 ? 'col-span-5 pr-8' : i === 1 ? 'col-span-3 px-4' : 'col-span-2 pl-4'
-              const titleSize = i === 0 ? 'text-2xl' : 'text-xl'
+              // Middle column: border-x dividers + vertical offset for asymmetry
+              const colClass = i === 0
+                ? 'pr-10'
+                : i === 1
+                  ? 'px-10 border-x border-[#1C1C1C]/10 mt-12'
+                  : 'pl-10'
               return (
-                <Fragment key={i}>
-                  {i > 0 && (
-                    <div className="col-span-1 flex justify-center">
-                      <div className="w-px h-full bg-[#1C1C1C]/10" />
-                    </div>
-                  )}
-                  <div className={`${colSpan} py-2`}>
-                    <div className={`w-10 h-10 rounded-sm ${f.iconBg} flex items-center justify-center mb-5`}>
-                      <Icon className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className={`font-editorial ${titleSize} font-bold text-[#1C1C1C] mb-3`}>{f.title}</h3>
-                    <p className="text-sm text-[#1C1C1C]/50 leading-relaxed mb-5">{f.desc}</p>
-                    <Link
-                      to={f.to}
-                      className="text-sm text-[#1C1C1C] underline underline-offset-8 decoration-[#1C1C1C]/20 hover:decoration-[#1C1C1C] transition-colors duration-300"
-                    >
-                      {f.link}
-                    </Link>
+                <div key={i} className={`group ${colClass} py-2`}>
+                  <div className={`w-10 h-10 rounded-sm ${f.iconBg} flex items-center justify-center mb-5`}>
+                    <Icon className="w-5 h-5 text-white" />
                   </div>
-                </Fragment>
+                  <h3 className={`font-editorial ${i === 0 ? 'text-2xl' : 'text-xl'} font-bold text-[#1C1C1C] mb-3`}>{f.title}</h3>
+                  <p className="text-sm text-[#1C1C1C]/50 leading-relaxed mb-6">{f.desc}</p>
+                  <Link
+                    to={f.to}
+                    className="inline-flex items-center gap-1 text-sm text-[#1C1C1C]/70 underline underline-offset-[6px] decoration-[#1C1C1C]/15 hover:decoration-[#1C1C1C] hover:text-[#1C1C1C] transition-all duration-300"
+                  >
+                    {f.link}
+                    <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">›</span>
+                  </Link>
+                </div>
               )
             })}
           </div>

@@ -18,6 +18,10 @@ import { STATUS_MAP, STATUS_LIST } from '../lib/constants'
 import type { ApplicationStatus } from '../lib/constants'
 import { useToast } from '../components/Toast'
 import { PaywallModal } from '../components/PaywallModal'
+import {
+  filterApplications,
+  groupApplicationsByStatus,
+} from './boardUtils'
 
 export default function Board() {
   useSEO({ title: '我的投递 - 校招助手', path: '/board' })
@@ -33,20 +37,11 @@ export default function Board() {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
   const filtered = useMemo(() => {
-    if (!search) return applications
-    const q = search.toLowerCase()
-    return applications.filter(
-      (a) => a.title.toLowerCase().includes(q) || a.company.toLowerCase().includes(q)
-    )
+    return filterApplications(applications, search)
   }, [applications, search])
 
   const grouped = useMemo(() => {
-    const map: Record<ApplicationStatus, Application[]> = {} as Record<ApplicationStatus, Application[]>
-    STATUS_LIST.forEach((s) => (map[s] = []))
-    filtered.forEach((a) => {
-      if (map[a.status]) map[a.status].push(a)
-    })
-    return map
+    return groupApplicationsByStatus(filtered)
   }, [filtered])
 
   const handleDragEnd = async (event: DragEndEvent) => {

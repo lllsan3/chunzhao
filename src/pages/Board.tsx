@@ -18,6 +18,7 @@ import { STATUS_MAP, STATUS_LIST } from '../lib/constants'
 import type { ApplicationStatus } from '../lib/constants'
 import { useToast } from '../components/Toast'
 import { PaywallModal } from '../components/PaywallModal'
+import { splitPositions } from '../lib/splitPositions'
 
 export default function Board() {
   useSEO({ title: '我的投递 - 校招助手', path: '/board' })
@@ -49,6 +50,11 @@ export default function Board() {
     return map
   }, [filtered])
 
+  const visibleMobileStatuses = useMemo(
+    () => STATUS_LIST.filter((status) => grouped[status].length > 0 || mobileTab === status),
+    [grouped, mobileTab]
+  )
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
     if (!over) return
@@ -77,25 +83,26 @@ export default function Board() {
 
   return (
     <div className="min-h-screen bg-[#F9F9F6]">
-      <div className="max-w-full mx-auto px-4 md:px-6 py-4 md:py-6">
+      <div className="max-w-full mx-auto px-3 pt-3 pb-4 md:px-6 md:py-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
+        <div className="mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-lg md:text-2xl font-semibold text-slate-900 tracking-tight">
+            <p className="hidden text-[10px] tracking-[0.28em] text-gray-400 md:block md:text-xs">BOARD</p>
+            <h1 className="mt-1 font-serif text-[26px] font-semibold text-slate-900 tracking-tight md:mt-2 md:text-4xl">
               <span className="hidden md:inline">我的投递</span>
               <span className="md:hidden">{mobileTab === 'all' ? `全部（${filtered.length}）` : `${STATUS_MAP[mobileTab]}（${grouped[mobileTab].length}）`}</span>
             </h1>
-            <p className="text-xs text-slate-500 mt-0.5 hidden md:block">拖拽卡片更新进度</p>
+            <p className="text-xs text-slate-500 mt-1 hidden md:block">拖拽卡片更新进度</p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
+          <div className="flex items-center gap-1.5">
+            <div className="relative min-w-0 flex-1 md:flex-none">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="搜索..."
-                className="pl-8 pr-3 h-9 md:h-10 rounded-md border border-gray-200 text-sm bg-white w-36 sm:w-48 focus:outline-none focus:ring-1 focus:ring-slate-300 focus:border-slate-300"
+                className="h-[34px] w-full border border-gray-200 bg-white pl-8 pr-2.5 text-[13px] outline-none transition-colors placeholder:text-gray-400 focus:border-black md:h-10 md:w-48 md:pr-3 md:text-sm"
               />
             </div>
             <button
@@ -103,7 +110,7 @@ export default function Board() {
                 if (isAtFreeLimit && !membership.isMember) setShowPaywall(true)
                 else setShowAddModal(true)
               }}
-              className="inline-flex items-center gap-1 px-3 h-9 md:h-10 rounded-md text-sm font-medium text-slate-600 border border-slate-300 bg-transparent hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-colors shrink-0"
+              className="inline-flex h-[34px] w-[34px] shrink-0 items-center justify-center border border-slate-300 bg-transparent px-0 text-sm font-medium text-slate-600 transition-colors hover:border-black hover:bg-black hover:text-white sm:w-auto sm:px-3 md:h-10"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">手动添加</span>
@@ -131,10 +138,10 @@ export default function Board() {
         {/* ═══ Mobile: Editorial text tabs + compact cards ═══ */}
         <div className="md:hidden">
           {/* Text-flow tabs — no pills, no bg blocks */}
-          <div className="flex overflow-x-auto whitespace-nowrap gap-5 pb-2 mb-3 border-b border-gray-200">
+          <div className="mb-2 flex overflow-x-auto gap-3 whitespace-nowrap border-b border-gray-200 pb-1.5">
             <button
               onClick={() => setMobileTab('all')}
-              className={`shrink-0 pb-2 text-sm transition-colors ${
+              className={`shrink-0 pb-1.5 text-[12px] transition-colors ${
                 mobileTab === 'all'
                   ? 'text-slate-900 font-medium border-b-2 border-slate-900 -mb-px'
                   : 'text-slate-400'
@@ -142,14 +149,14 @@ export default function Board() {
             >
               全部 {filtered.length}
             </button>
-            {STATUS_LIST.map((status) => {
+            {visibleMobileStatuses.map((status) => {
               const active = mobileTab === status
               const count = grouped[status].length
               return (
                 <button
                   key={status}
                   onClick={() => setMobileTab(status)}
-                  className={`shrink-0 pb-2 text-sm transition-colors ${
+                  className={`shrink-0 pb-1.5 text-[12px] transition-colors ${
                     active
                       ? 'text-slate-900 font-medium border-b-2 border-slate-900 -mb-px'
                       : 'text-slate-400'
@@ -162,7 +169,7 @@ export default function Board() {
           </div>
 
           {/* Compact card list */}
-          <div className="space-y-1.5">
+          <div className="space-y-0">
             {(() => {
               const list = mobileTab === 'all' ? filtered : grouped[mobileTab]
               return list.length === 0 ? (
@@ -237,14 +244,14 @@ function KanbanColumn({ status, items, isLast, onDelete }: {
       ref={setNodeRef}
       className={`shrink-0 w-[200px] min-h-[300px] px-2 pt-2 pb-4 transition-colors ${
         !isLast ? 'border-r border-gray-200' : ''
-      } ${isOver ? 'bg-slate-100/60' : ''}`}
+      } ${isOver ? 'bg-black/[0.03]' : ''}`}
     >
       {/* Column header — minimal text */}
-      <div className="flex items-center gap-1.5 mb-3 px-0.5">
-        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getColorHex(status) }} />
-        <span className="text-xs font-medium text-slate-700">{STATUS_MAP[status]}</span>
+      <div className="mb-3 flex items-center gap-1.5 px-0.5">
+        <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: getToneHex(status) }} />
+        <span className="text-[10px] font-medium tracking-[0.18em] text-slate-600">{STATUS_MAP[status]}</span>
         {items.length > 0 && (
-          <span className="text-[10px] text-slate-400 ml-auto">{items.length}</span>
+          <span className="ml-auto text-[10px] text-slate-400">{items.length}</span>
         )}
       </div>
       <div className="space-y-1.5">
@@ -287,11 +294,11 @@ function DraggableCard({ app, onDelete }: { app: Application; onDelete: () => vo
       {...listeners}
       {...attributes}
       onClick={handleClick}
-      className="group relative bg-white rounded-md border border-gray-200 shadow-none px-2.5 py-2 cursor-grab active:cursor-grabbing hover:border-gray-300 transition-colors"
+      className="group relative cursor-grab border border-gray-200 bg-white px-2.5 py-2 shadow-none transition-colors hover:border-gray-300 active:cursor-grabbing"
     >
       <button
         onClick={(e) => { e.stopPropagation(); onDelete() }}
-        className="absolute top-1.5 right-1.5 w-5 h-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all"
+        className="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center border border-transparent text-slate-400 opacity-0 transition-all hover:border-black hover:text-black group-hover:opacity-100"
         title="移除"
       >
         <Trash2 className="w-3 h-3" />
@@ -310,36 +317,43 @@ function DraggableCard({ app, onDelete }: { app: Application; onDelete: () => vo
 /* ═══════════ Mobile: Compact Card ═══════════ */
 
 function MobileCard({ app, onDelete }: { app: Application; onDelete: () => void }) {
-  const positions = app.title.split(/[,，;；、/]+/).map(s => s.trim()).filter(s => s.length >= 2 && s.length <= 20)
+  const positions = splitPositions(app.title)
+  const city = app.city?.split(',')[0].split('、')[0]
 
   return (
-    <div className="relative bg-white rounded-md border border-gray-200 shadow-none px-3 py-2.5">
+    <div className="relative border-b border-gray-200 py-2">
       {/* Delete button */}
       <button
         onClick={onDelete}
-        className="absolute top-2.5 right-2.5 w-6 h-6 rounded flex items-center justify-center text-slate-300 active:text-red-500 transition-colors"
+        className="absolute right-0 top-2 flex h-[22px] w-[22px] items-center justify-center border border-transparent text-slate-300 transition-colors active:text-black"
       >
         <Trash2 className="w-3 h-3" />
       </button>
 
       <Link to={`/applications/${app.id}`} className="block pr-7">
-        {/* Company — anchor */}
-        <p className="text-sm font-semibold text-slate-900 tracking-tight line-clamp-1">{app.company}</p>
+        <div className="flex items-start justify-between gap-3">
+          <p className="min-w-0 flex-1 line-clamp-1 text-[13px] font-medium tracking-tight text-slate-900">
+            {app.company}
+          </p>
+          <span className="shrink-0 text-[10px] tracking-[0.18em] text-slate-400">
+            {STATUS_MAP[app.status]}
+          </span>
+        </div>
 
-        {/* Position chips */}
-        <div className="flex flex-wrap items-center gap-1 mt-1">
+        <div className="mt-1 flex flex-wrap items-center gap-1">
           {positions.slice(0, 2).map((pos) => (
-            <span key={pos} className="bg-gray-100/80 px-1.5 py-0.5 rounded-sm text-[10px] leading-tight text-gray-700">{pos}</span>
+            <span key={pos} className="rounded-sm bg-gray-100 px-1.5 py-0.5 text-[10px] leading-tight text-gray-700">
+              {pos}
+            </span>
           ))}
           {positions.length > 2 && (
             <span className="text-[10px] text-gray-400">+{positions.length - 2}</span>
           )}
         </div>
 
-        {/* Metadata — middot delimited */}
-        <div className="flex items-center mt-1.5 text-[10px] text-slate-500 leading-none">
-          {app.city && <span>{app.city.split(',')[0].split('、')[0]}</span>}
-          {app.city && app.updated_at && <span className="text-slate-300 mx-1">·</span>}
+        <div className="mt-1 flex items-center text-[10px] leading-none text-slate-500">
+          {city && <span>{city}</span>}
+          {city && app.updated_at && <span className="mx-1 text-slate-300">·</span>}
           {app.updated_at && <span>{timeAgo(app.updated_at)}</span>}
         </div>
       </Link>
@@ -394,49 +408,52 @@ function ManualAddModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/40" />
-      <div className="relative bg-white rounded-md shadow-xl w-full max-w-md p-5" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-slate-900">手动添加</h2>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-3 md:items-center md:p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/35" />
+      <div className="relative w-full max-w-md border border-gray-200 bg-white px-3 py-4 shadow-none md:px-6 md:py-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between gap-4 border-b border-gray-200 pb-3 md:pb-4">
+          <div>
+            <p className="text-[10px] tracking-[0.28em] text-gray-400 md:text-xs">MANUAL ENTRY</p>
+            <h2 className="mt-1.5 text-base font-medium tracking-tight text-gray-900 md:mt-2 md:text-lg">手动添加</h2>
+          </div>
+          <button onClick={onClose} className="border border-gray-200 p-1.5 text-gray-500 transition-colors hover:border-black hover:text-black">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="mt-4 space-y-3 md:mt-5 md:space-y-4">
           <div>
-            <label className="block text-xs text-slate-500 mb-1">职位名称 *</label>
+            <label className="mb-1.5 block text-xs tracking-[0.18em] text-gray-500">职位名称 *</label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="如：前端开发工程师" required
-              className="w-full px-3 py-2 rounded-md border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-slate-300" />
+              className="w-full border border-gray-200 bg-transparent px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-black md:py-3" />
           </div>
           <div>
-            <label className="block text-xs text-slate-500 mb-1">公司 *</label>
+            <label className="mb-1.5 block text-xs tracking-[0.18em] text-gray-500">公司 *</label>
             <input type="text" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="如：腾讯" required
-              className="w-full px-3 py-2 rounded-md border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-slate-300" />
+              className="w-full border border-gray-200 bg-transparent px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-black md:py-3" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs text-slate-500 mb-1">城市</label>
+              <label className="mb-1.5 block text-xs tracking-[0.18em] text-gray-500">城市</label>
               <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="深圳"
-                className="w-full px-3 py-2 rounded-md border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-slate-300" />
+                className="w-full border border-gray-200 bg-transparent px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-black md:py-3" />
             </div>
             <div>
-              <label className="block text-xs text-slate-500 mb-1">截止日期</label>
+              <label className="mb-1.5 block text-xs tracking-[0.18em] text-gray-500">截止日期</label>
               <input type="text" value={deadline} onChange={(e) => setDeadline(e.target.value)} placeholder="2026.04.30"
-                className="w-full px-3 py-2 rounded-md border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-slate-300" />
+                className="w-full border border-gray-200 bg-transparent px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-black md:py-3" />
             </div>
           </div>
           <div>
-            <label className="block text-xs text-slate-500 mb-1">JD 链接</label>
+            <label className="mb-1.5 block text-xs tracking-[0.18em] text-gray-500">JD 链接</label>
             <input type="text" value={jdUrl}
               onChange={(e) => { setJdUrl(e.target.value); if (urlError) validateUrl(e.target.value) }}
               onBlur={() => validateUrl(jdUrl)} placeholder="https://..."
-              className={`w-full px-3 py-2 rounded-md border text-sm focus:outline-none focus:ring-1 ${urlError ? 'border-red-300 focus:ring-red-200' : 'border-gray-200 focus:ring-slate-300'}`} />
+              className={`w-full border bg-transparent px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 md:py-3 ${urlError ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-black'}`} />
             {urlError && <p className="text-xs text-red-500 mt-1">{urlError}</p>}
           </div>
           <button type="submit" disabled={submitting || !title.trim() || !company.trim()}
-            className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-md text-sm font-medium text-slate-600 border border-slate-300 hover:bg-slate-900 hover:text-white hover:border-slate-900 disabled:opacity-40 transition-colors">
+            className="flex w-full items-center justify-center gap-1.5 bg-black py-3.5 text-sm font-bold tracking-[0.18em] text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400 md:py-4">
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
             {submitting ? '添加中...' : '添加到看板'}
           </button>
@@ -446,16 +463,16 @@ function ManualAddModal({
   )
 }
 
-function getColorHex(status: ApplicationStatus): string {
+function getToneHex(status: ApplicationStatus): string {
   const map: Record<ApplicationStatus, string> = {
-    pending_review: '#f59e0b',
-    to_apply: '#3b82f6',
-    applied: '#10b981',
-    written_test: '#6366f1',
-    interview: '#8b5cf6',
-    offer: '#10b981',
-    rejected: '#ef4444',
-    abandoned: '#94a3b8',
+    pending_review: '#6b7280',
+    to_apply: '#111827',
+    applied: '#4b5563',
+    written_test: '#6b7280',
+    interview: '#9ca3af',
+    offer: '#000000',
+    rejected: '#9ca3af',
+    abandoned: '#d1d5db',
   }
   return map[status]
 }

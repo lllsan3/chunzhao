@@ -1,11 +1,17 @@
-import { useEffect, useState, useMemo } from 'react'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, MapPin, Calendar, ExternalLink, Lightbulb, Copy, AlertTriangle, CheckCircle, Plus, Check, Building2 } from 'lucide-react'
+import {
+  ArrowLeft,
+  Check,
+  ExternalLink,
+  Plus,
+} from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import type { Job } from '../hooks/useJobs'
 import { useApplications } from '../hooks/useApplications'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../components/Toast'
+import { CollapsibleTextBlock } from '../components/CollapsibleTextBlock'
 
 interface RelatedJob {
   id: string
@@ -15,6 +21,38 @@ interface RelatedJob {
   tags: string[]
   deadline: string | null
   updated_at: string
+}
+
+function DetailPanel({
+  eyebrow,
+  title,
+  children,
+  action,
+}: {
+  eyebrow: string
+  title: string
+  children: ReactNode
+  action?: ReactNode
+}) {
+  return (
+    <section className="border border-gray-200 bg-white px-3 py-3 shadow-none md:px-5 md:py-5">
+      <div className="flex flex-col gap-2 border-b border-gray-200 pb-2.5 md:flex-row md:items-start md:justify-between md:gap-4 md:pb-3">
+        <div>
+          <p className="hidden text-[10px] tracking-[0.28em] text-gray-400 md:block md:text-xs">{eyebrow}</p>
+          <h2 className="text-[15px] font-medium tracking-tight text-gray-900 md:mt-2 md:text-base">
+            {title}
+          </h2>
+        </div>
+        {action}
+      </div>
+      <div className="pt-3 md:pt-4">{children}</div>
+    </section>
+  )
+}
+
+function compactMeta(value: string | null) {
+  if (!value) return null
+  return value.split(',')[0]?.split('、')[0]?.trim() || value
 }
 
 export default function JobDetail() {
@@ -30,12 +68,13 @@ export default function JobDetail() {
   const [importing, setImporting] = useState(false)
 
   const isImported = useMemo(
-    () => applications.some((a) => a.job_id === jobId),
+    () => applications.some((application) => application.job_id === jobId),
     [applications, jobId]
   )
 
   useEffect(() => {
     if (!jobId) return
+
     supabase
       .from('jobs')
       .select('*')
@@ -47,10 +86,10 @@ export default function JobDetail() {
           setLoading(false)
           return
         }
+
         setJob(data)
         setLoading(false)
 
-        // Fetch related jobs: same company, fallback to same company_type + industry
         if (data) {
           supabase
             .from('jobs')
@@ -61,11 +100,12 @@ export default function JobDetail() {
             .limit(6)
             .then(({ data: byCompany }) => {
               const results = (byCompany ?? []) as RelatedJob[]
+
               if (results.length >= 3) {
                 setRelatedJobs(results)
               } else if (data.company_type) {
-                // Backfill with same company_type (e.g. other 央国企 or 民营企业 jobs)
-                const existingIds = new Set(results.map(r => r.id))
+                const existingIds = new Set(results.map((row) => row.id))
+
                 supabase
                   .from('jobs')
                   .select('id, title, company, city, tags, deadline, updated_at')
@@ -75,8 +115,8 @@ export default function JobDetail() {
                   .order('updated_at', { ascending: false })
                   .limit(6 - results.length)
                   .then(({ data: bySimilar }) => {
-                    const extra = (bySimilar ?? []).filter((r: RelatedJob) => !existingIds.has(r.id))
-                    setRelatedJobs([...results, ...extra as RelatedJob[]])
+                    const extra = (bySimilar ?? []).filter((row: RelatedJob) => !existingIds.has(row.id))
+                    setRelatedJobs([...results, ...(extra as RelatedJob[])])
                   })
               } else {
                 setRelatedJobs(results)
@@ -91,10 +131,13 @@ export default function JobDetail() {
       navigate(`/login?redirect=/jobs/${jobId}`)
       return
     }
+
     if (!job || isImported) return
+
     setImporting(true)
     const { error } = await importJob(job)
     setImporting(false)
+
     if (error) {
       if (error.message?.includes('FREE_LIMIT_REACHED')) {
         toast('error', '免费版最多管理 3 个职位，请升级后继续添加')
@@ -115,221 +158,239 @@ export default function JobDetail() {
     }
   }
 
-  if (loading) return <div className="min-h-screen bg-page flex items-center justify-center text-ink-muted/70">加载中...</div>
-  if (loadError) return (
-    <div className="min-h-screen bg-page flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-ink-muted mb-4">数据加载失败，请刷新页面重试</p>
-        <button onClick={() => window.location.reload()} className="px-5 py-2.5 rounded-xl bg-brand text-white text-sm font-medium hover:bg-brand-hover">重新加载</button>
+  const relatedColumns = useMemo(() => {
+    const midpoint = Math.ceil(relatedJobs.length / 2)
+    return [relatedJobs.slice(0, midpoint), relatedJobs.slice(midpoint)]
+  }, [relatedJobs])
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-page px-4 text-gray-500">
+        加载中...
       </div>
-    </div>
-  )
-  if (!job) return <div className="min-h-screen bg-page flex items-center justify-center text-ink-muted/70">职位未找到</div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-page px-4">
+        <div className="w-full max-w-md border border-gray-200 bg-white p-6 text-center shadow-none">
+          <p className="text-sm leading-6 text-gray-600">数据加载失败，请刷新页面重试。</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-5 inline-flex items-center justify-center bg-black px-6 py-3 text-sm font-bold tracking-[0.16em] text-white transition-colors hover:bg-gray-800"
+          >
+            重新加载
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!job) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-page px-4 text-gray-500">
+        职位未找到
+      </div>
+    )
+  }
 
   const hasRichContent = !!(job.description || job.resume_tips || job.evaluation || job.risk_notes)
+  const metaItems = [
+    job.company_type,
+    compactMeta(job.city),
+    job.deadline ? `截止 ${job.deadline}` : null,
+    job.target_graduates,
+  ].filter(Boolean)
 
   return (
     <div className="min-h-screen bg-page">
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <Link to="/jobs" className="inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink mb-4">
-          <ArrowLeft className="w-4 h-4" />
+      <div className="mx-auto max-w-5xl px-3 py-4 md:px-4 md:py-8">
+        <Link
+          to="/jobs"
+          className="group inline-flex items-center gap-1 text-sm text-gray-500 underline underline-offset-[6px] decoration-gray-200 transition-all hover:text-black hover:decoration-black"
+        >
+          <ArrowLeft className="h-4 w-4" />
           返回职位库
         </Link>
 
-        {/* Hero card — larger when no rich content */}
-        <div className={`bg-white rounded-2xl border border-line-light shadow-sm ${hasRichContent ? 'p-6' : 'p-8'}`}>
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-            <div className="flex-1">
-              <h1 className={`font-bold text-ink ${hasRichContent ? 'text-xl' : 'text-2xl'}`}>
+        <section className="mt-4 border-0 bg-transparent px-0 py-0 shadow-none md:border md:border-gray-200 md:bg-white md:px-7 md:py-7">
+          <div className="flex flex-col gap-4 border border-gray-200 bg-white px-3 py-4 md:border-0 md:bg-transparent md:px-0 md:py-0">
+            <div className="min-w-0 flex-1">
+              <p className="hidden text-[10px] tracking-[0.28em] text-gray-400 md:block md:text-xs">JOB FILE</p>
+              <h1 className="font-serif text-[28px] font-semibold leading-tight tracking-tight text-gray-900 md:mt-2 md:text-4xl">
                 {job.title}
               </h1>
-              <div className="flex items-center gap-2 mt-2">
-                <Building2 className="w-4 h-4 text-ink-muted/70" />
-                <span className="text-lg text-ink font-medium">{job.company}</span>
-                {job.company_type && (
-                  <span className="px-2 py-0.5 rounded-full bg-tag-bg text-ink-muted text-xs">
-                    {job.company_type}
-                  </span>
-                )}
-              </div>
+              <p className="mt-2.5 text-base font-medium text-gray-900 md:mt-3 md:text-lg">
+                {job.company}
+              </p>
 
-              <div className="flex flex-wrap gap-2 mt-4">
-                {job.city && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-tag-bg text-ink-muted text-sm">
-                    <MapPin className="w-4 h-4" /> {job.city}
-                  </span>
-                )}
-                {job.deadline && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-tag-bg text-ink-muted text-sm">
-                    <Calendar className="w-4 h-4" /> 截止: {job.deadline}
-                  </span>
-                )}
-                {job.target_graduates && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-accent-soft text-accent text-sm">
-                    {job.target_graduates}
-                  </span>
-                )}
-              </div>
+              {metaItems.length > 0 ? (
+                <p className="mt-2 text-[11px] leading-5 text-gray-500 md:text-sm md:leading-6">
+                  {metaItems.join(' · ')}
+                </p>
+              ) : null}
 
-              {job.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {job.tags.map((tag) => (
-                    <span key={tag} className="px-2 py-0.5 rounded-full bg-tag-bg text-ink-muted text-xs">
+              {job.tags.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-1">
+                  {job.tags.slice(0, 6).map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-sm bg-gray-100 px-2 py-1 text-[10px] text-gray-700 md:text-xs"
+                    >
                       {tag}
                     </span>
                   ))}
+                  {job.tags.length > 6 ? (
+                    <span className="px-1 py-1 text-[10px] text-gray-400 md:text-xs">
+                      +{job.tags.length - 6}
+                    </span>
+                  ) : null}
                 </div>
-              )}
+              ) : null}
 
-              {job.referral_code && (
-                <div className="mt-4 flex items-center gap-2">
-                  <span className="text-sm text-ink-muted">内推码:</span>
+              {job.referral_code ? (
+                <div className="mt-3 inline-flex w-full flex-wrap items-center gap-2 border border-gray-200 px-3 py-2 text-sm text-gray-600 md:mt-4 md:w-auto">
+                  <span>内推码</span>
+                  <span className="font-mono tracking-[0.16em] text-gray-900">{job.referral_code}</span>
                   <button
                     onClick={() => copyText(job.referral_code!)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 text-sm font-mono hover:bg-amber-100"
+                    className="text-xs text-gray-500 underline underline-offset-4 decoration-gray-200 transition-all hover:text-black hover:decoration-black"
                   >
-                    {job.referral_code}
-                    <Copy className="w-3.5 h-3.5" />
+                    复制
                   </button>
                 </div>
-              )}
+              ) : null}
             </div>
 
-            {/* JD link badge — desktop right side */}
-            {job.jd_url && (
-              <a
-                href={job.jd_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent-soft text-accent text-sm font-medium hover:bg-blue-100 transition-colors"
+            <div className="flex w-full shrink-0 flex-col items-start gap-3 md:w-auto md:items-end">
+              {job.jd_url ? (
+                <a
+                  href={job.jd_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center gap-1 text-sm text-gray-600 underline underline-offset-[6px] decoration-gray-200 transition-all hover:text-black hover:decoration-black"
+                >
+                  查看原 JD
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              ) : null}
+
+              <button
+                onClick={handleImport}
+                disabled={isImported || importing}
+                className={`inline-flex w-full items-center justify-center gap-2 px-5 py-3.5 text-sm font-bold tracking-[0.16em] transition-colors md:min-w-[220px] md:px-6 md:py-4 ${
+                  isImported
+                    ? 'border border-gray-200 bg-white text-gray-500'
+                    : 'bg-black text-white hover:bg-gray-800'
+                } disabled:cursor-not-allowed disabled:opacity-70`}
               >
-                <ExternalLink className="w-4 h-4" />
-                查看原 JD
-              </a>
-            )}
+                {isImported ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    已导入
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    {importing ? '导入中...' : '导入申请池'}
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* Import CTA */}
-          <div className="mt-6 pt-5 border-t border-line-light">
-            <button
-              onClick={handleImport}
-              disabled={isImported || importing}
-              className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-medium transition-colors ${
-                isImported
-                  ? 'bg-emerald-50 text-emerald-600 cursor-default'
-                  : 'bg-brand text-white hover:bg-brand-hover'
-              } disabled:opacity-60`}
-            >
-              {isImported ? (
-                <>
-                  <Check className="w-4 h-4" />
-                  已导入到申请池
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4" />
-                  {importing ? '导入中...' : '导入到申请池，开始管理这个岗位'}
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+          <div className={`mt-3 ${hasRichContent ? 'grid grid-cols-1 gap-3 md:mt-4 md:gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,0.9fr)] lg:gap-8' : ''}`}>
+            <div className="space-y-3 md:space-y-4">
+              {job.description ? (
+                <DetailPanel eyebrow="DESCRIPTION" title="职位描述">
+                  <CollapsibleTextBlock text={job.description} />
+                </DetailPanel>
+              ) : null}
 
-        {/* Rich content sections — only shown when data exists */}
-        {hasRichContent && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
-            <div className="lg:col-span-2 space-y-4">
-              {job.description && (
-                <div className="bg-white rounded-2xl border border-line-light shadow-sm p-6">
-                  <h2 className="font-semibold text-ink mb-3">职位描述</h2>
-                  <div className="bg-tag-bg rounded-xl p-4 text-sm text-ink-muted leading-relaxed whitespace-pre-wrap">
-                    {job.description}
-                  </div>
-                </div>
-              )}
-
-              {job.resume_tips && (
-                <div className="bg-white rounded-2xl border border-line-light shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="flex items-center gap-2 font-semibold text-ink">
-                      <Lightbulb className="w-4 h-4 text-amber-500" />
-                      简历优化提词
-                    </h2>
+              {job.resume_tips ? (
+                <DetailPanel
+                  eyebrow="RESUME NOTES"
+                  title="简历优化提词"
+                  action={
                     <button
                       onClick={() => copyText(job.resume_tips!)}
-                      className="flex items-center gap-1 text-xs text-ink-muted/70 hover:text-ink-muted"
+                      className="text-xs text-gray-500 underline underline-offset-4 decoration-gray-200 transition-all hover:text-black hover:decoration-black"
                     >
-                      <Copy className="w-3.5 h-3.5" />
                       复制
                     </button>
-                  </div>
-                  <div className="text-sm text-ink-muted leading-relaxed whitespace-pre-wrap">
-                    {job.resume_tips}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              {job.evaluation && (
-                <div className="bg-white rounded-2xl border-2 border-emerald-200 shadow-sm p-5">
-                  <h3 className="flex items-center gap-2 font-semibold text-emerald-700 mb-2 text-sm">
-                    <CheckCircle className="w-4 h-4" />
-                    评估参考
-                  </h3>
-                  <p className="text-sm text-ink-muted leading-relaxed whitespace-pre-wrap">
-                    {job.evaluation}
-                  </p>
-                </div>
-              )}
-
-              {job.risk_notes && (
-                <div className="bg-white rounded-2xl border-2 border-amber-200 shadow-sm p-5">
-                  <h3 className="flex items-center gap-2 font-semibold text-amber-700 mb-2 text-sm">
-                    <AlertTriangle className="w-4 h-4" />
-                    风险提示
-                  </h3>
-                  <p className="text-sm text-ink-muted leading-relaxed whitespace-pre-wrap">
-                    {job.risk_notes}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Related jobs */}
-        {relatedJobs.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-lg font-bold text-ink mb-4">相关职位推荐</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {relatedJobs.map((rj) => (
-                <Link
-                  key={rj.id}
-                  to={`/jobs/${rj.id}`}
-                  className="bg-white rounded-2xl border border-line-light shadow-sm p-4 hover:shadow-md transition-shadow"
+                  }
                 >
-                  <p className="font-semibold text-ink text-sm line-clamp-1">{rj.title}</p>
-                  <p className="text-xs text-ink-muted mt-1">{rj.company}</p>
-                  <div className="flex items-center gap-2 mt-2 text-xs text-ink-muted/70">
-                    {rj.city && (
-                      <span className="flex items-center gap-0.5">
-                        <MapPin className="w-3 h-3" />
-                        {rj.city}
-                      </span>
-                    )}
-                    {rj.deadline && (
-                      <span className="flex items-center gap-0.5">
-                        <Calendar className="w-3 h-3" />
-                        {rj.deadline}
-                      </span>
-                    )}
-                  </div>
-                </Link>
+                  <CollapsibleTextBlock text={job.resume_tips} />
+                </DetailPanel>
+              ) : null}
+            </div>
+
+            {hasRichContent ? (
+              <div className="space-y-3 md:space-y-4 lg:border-l lg:border-gray-200 lg:pl-8">
+                {job.evaluation ? (
+                  <DetailPanel eyebrow="EVALUATION" title="评估参考">
+                    <CollapsibleTextBlock text={job.evaluation} />
+                  </DetailPanel>
+                ) : null}
+
+                {job.risk_notes ? (
+                  <DetailPanel eyebrow="RISK NOTES" title="风险提示">
+                    <CollapsibleTextBlock text={job.risk_notes} />
+                  </DetailPanel>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </section>
+
+        {relatedJobs.length > 0 ? (
+          <section className="mt-4 border border-gray-200 bg-white px-3 py-4 shadow-none md:mt-6 md:px-6 md:py-6">
+            <div className="border-b border-gray-200 pb-3 md:pb-4">
+              <p className="hidden text-[10px] tracking-[0.28em] text-gray-400 md:block md:text-xs">RELATED</p>
+              <h2 className="font-serif text-xl font-semibold tracking-tight text-gray-900 md:mt-2 md:text-2xl">
+                相关职位推荐
+              </h2>
+            </div>
+
+            <div className="mt-3 md:mt-4 md:grid md:grid-cols-2 md:gap-10">
+              {relatedColumns.map((column, columnIndex) => (
+                <div
+                  key={`column-${columnIndex}`}
+                  className={columnIndex === 1 ? 'md:border-l md:border-gray-200 md:pl-10' : ''}
+                >
+                  {column.map((relatedJob) => (
+                    <Link
+                      key={relatedJob.id}
+                      to={`/jobs/${relatedJob.id}`}
+                      className="group block border-b border-gray-200 py-3 last:border-b-0 md:py-4"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 md:text-base">
+                            {relatedJob.title}
+                          </p>
+                          <p className="mt-1 text-[11px] leading-5 text-gray-500 md:text-sm">
+                            {[
+                              relatedJob.company,
+                              compactMeta(relatedJob.city),
+                              relatedJob.deadline ? `截止 ${relatedJob.deadline}` : null,
+                            ]
+                              .filter(Boolean)
+                              .join(' · ')}
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-gray-400 transition-transform group-hover:translate-x-1">
+                          →
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               ))}
             </div>
-          </div>
-        )}
+          </section>
+        ) : null}
       </div>
     </div>
   )

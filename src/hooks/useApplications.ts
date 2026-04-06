@@ -242,10 +242,27 @@ export function useApplications() {
   }
 
   const updateNotes = async (id: string, notes: string) => {
+    const prev = applications
+    const updatedAt = new Date().toISOString()
+
+    setApplications((curr) => {
+      const updated = curr.map((app) =>
+        app.id === id ? { ...app, notes, updated_at: updatedAt } : app
+      )
+      setCache(CACHE_KEY, updated)
+      return updated
+    })
+
     const { error } = await supabase
       .from('user_applications')
-      .update({ notes, updated_at: new Date().toISOString() })
+      .update({ notes, updated_at: updatedAt })
       .eq('id', id)
+
+    if (error) {
+      setApplications(prev)
+      setCache(CACHE_KEY, prev)
+    }
+
     return { error }
   }
 
@@ -254,10 +271,29 @@ export function useApplications() {
     reminder_date: string | null,
     reminder_note: string | null
   ) => {
+    const prev = applications
+    const updatedAt = new Date().toISOString()
+
+    setApplications((curr) => {
+      const updated = curr.map((app) =>
+        app.id === id
+          ? { ...app, reminder_date, reminder_note, updated_at: updatedAt }
+          : app
+      )
+      setCache(CACHE_KEY, updated)
+      return updated
+    })
+
     const { error } = await supabase
       .from('user_applications')
-      .update({ reminder_date, reminder_note, updated_at: new Date().toISOString() })
+      .update({ reminder_date, reminder_note, updated_at: updatedAt })
       .eq('id', id)
+
+    if (error) {
+      setApplications(prev)
+      setCache(CACHE_KEY, prev)
+    }
+
     return { error }
   }
 

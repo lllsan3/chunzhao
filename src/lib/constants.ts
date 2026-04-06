@@ -22,20 +22,6 @@ export const STATUS_LIST: ApplicationStatus[] = [
   'abandoned',
 ]
 
-export const STATUS_COLORS: Record<
-  ApplicationStatus,
-  { bg: string; text: string }
-> = {
-  pending_review: { bg: 'bg-amber-50', text: 'text-amber-700' },
-  to_apply: { bg: 'bg-accent-soft', text: 'text-accent-hover' },
-  applied: { bg: 'bg-emerald-50', text: 'text-emerald-700' },
-  written_test: { bg: 'bg-indigo-50', text: 'text-indigo-700' },
-  interview: { bg: 'bg-violet-50', text: 'text-violet-700' },
-  offer: { bg: 'bg-emerald-50', text: 'text-emerald-700' },
-  rejected: { bg: 'bg-red-50', text: 'text-red-700' },
-  abandoned: { bg: 'bg-tag-bg', text: 'text-ink-muted' },
-}
-
 export const COMPANY_TYPES = [
   '全部',
   '央国企',

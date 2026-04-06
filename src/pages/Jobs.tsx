@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Check, Search, Loader2, Building2, Flame, Briefcase } from 'lucide-react'
+import { Plus, Check, Search, Loader2 } from 'lucide-react'
 import { useSEO } from '../hooks/useSEO'
 import { useJobs } from '../hooks/useJobs'
 import { useApplications } from '../hooks/useApplications'
@@ -9,15 +9,16 @@ import { useSubscription } from '../hooks/useSubscription'
 import { useToast } from '../components/Toast'
 import { COMPANY_TYPES } from '../lib/constants'
 import { normalizeCity, getUniqueCities } from '../lib/cityNormalize'
+import { splitPositions } from '../lib/splitPositions'
 import { PaywallModal } from '../components/PaywallModal'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { trackFailure, trackSuccess } from '../lib/errorTracker'
 
 const QUICK_TAGS = [
-  { key: '全部', icon: null, label: '全部' },
-  { key: '26届热门春招', icon: Flame, label: '26届热门春招' },
-  { key: '国企央企', icon: Building2, label: '国企央企汇总' },
-  { key: '大厂实习', icon: Briefcase, label: '大厂实习汇总' },
+  { key: '全部', label: '全部' },
+  { key: '26届热门春招', label: '26届热门春招' },
+  { key: '国企央企', label: '国企央企汇总' },
+  { key: '大厂实习', label: '大厂实习汇总' },
 ] as const
 
 type QuickTag = (typeof QUICK_TAGS)[number]['key']
@@ -141,11 +142,12 @@ export default function Jobs() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-ink">职位库</h1>
+            <p className="text-[10px] tracking-[0.28em] text-gray-400 md:text-xs">JOB INDEX</p>
+            <h1 className="mt-2 font-serif text-3xl font-semibold tracking-tight text-gray-900 md:text-4xl">职位库</h1>
             <p className="text-sm text-ink-muted mt-1">
               共 <span className="font-medium text-ink">{totalCount}</span> 个职位
               {todayCount > 0 && (
-                <> · 今日更新 <span className="font-medium text-accent">{todayCount}</span> 个</>
+                <> · 今日更新 <span className="font-medium text-gray-900">{todayCount}</span> 个</>
               )}
             </p>
           </div>
@@ -159,7 +161,7 @@ export default function Jobs() {
                 onKeyDown={handleSearchKeyDown}
                 onBlur={handleSearchBlur}
                 placeholder="搜索公司、岗位、方向..."
-                className="pl-9 pr-3 h-11 rounded-lg border border-line text-sm bg-white w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                className="pl-9 pr-3 h-11 border border-gray-200 text-sm bg-white w-full sm:w-56 outline-none transition-colors placeholder:text-gray-400 focus:border-black"
               />
             </div>
             <div className="grid grid-cols-2 sm:flex gap-3">
@@ -191,25 +193,23 @@ export default function Jobs() {
         </div>
 
         {/* Quick tags */}
-        <div className="flex gap-2 overflow-x-auto mb-5">
-          {QUICK_TAGS.map(({ key, icon: Icon, label }) => {
+        <div className="flex gap-6 overflow-x-auto whitespace-nowrap mb-5 border-b border-gray-200 pb-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          {QUICK_TAGS.map(({ key, label }) => {
             const active = quickTag === key
             return (
               <button
                 key={key}
                 onClick={() => setQuickTag(key)}
-                className={`shrink-0 inline-flex items-center gap-1 px-4 min-h-[36px] rounded-full text-xs font-medium transition-colors ${
+                className={`shrink-0 border-b-2 pb-1.5 text-[13px] transition-colors md:text-sm ${
                   active
-                    ? 'bg-accent text-white'
-                    : 'bg-white text-ink-muted border border-line hover:border-accent/40 hover:text-accent'
+                    ? 'border-black font-semibold text-black'
+                    : 'border-transparent text-gray-500 hover:text-black'
                 }`}
               >
-                {Icon && <Icon className="w-3.5 h-3.5" />}
                 {label}
               </button>
             )
           })}
-{/* 笔试真题入口已移至顶部导航栏 */}
         </div>
 
         {/* Active filter indicator */}
@@ -229,25 +229,29 @@ export default function Jobs() {
           <div className="text-center py-20 text-ink-muted/70">暂无匹配职位</div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
+            <div className="grid grid-cols-1 gap-0 md:grid-cols-2 md:gap-3 xl:grid-cols-3">
               {filtered.map((job) => {
+                const isBusy = importingId === job.id || removingId === job.id
                 const imported = importedMap.has(job.id)
                 const positions = splitPositions(job.title)
+                const cityLabel = job.city ? job.city.split(',')[0].split('、')[0] : ''
+                const primaryTag = job.tags[0]
+
                 return (
                   <div
                     key={job.id}
-                    className="relative bg-white rounded-md border border-gray-200 px-3 py-2.5 md:p-4 flex flex-col"
+                    className="relative flex min-w-0 flex-col border-b border-gray-200 px-0 py-3 md:border md:bg-white md:px-4 md:py-4"
                   >
                     {/* Mobile: import button absolute top-right */}
                     <button
                       onClick={(e) => { e.stopPropagation(); handleToggle(job) }}
-                      disabled={importingId === job.id || removingId === job.id}
-                      className={`md:hidden absolute top-2.5 right-3 flex items-center gap-0.5 px-2 py-1 rounded text-[10px] font-medium transition-colors duration-200 ${
+                      disabled={isBusy}
+                      className={`md:hidden absolute right-0 top-3 flex items-center gap-0.5 border border-transparent px-2 py-1 text-[10px] font-medium transition-colors duration-200 ${
                         imported
-                          ? 'text-emerald-600 bg-emerald-50'
+                          ? 'border border-gray-200 bg-white text-gray-500'
                           : importingId === job.id
-                            ? 'text-white bg-slate-700'
-                            : 'text-slate-500 bg-slate-100 active:bg-slate-900 active:text-white'
+                            ? 'bg-black text-white'
+                            : 'bg-gray-100 text-gray-600 active:border-black active:bg-black active:text-white'
                       }`}
                     >
                       {importingId === job.id ? (
@@ -262,15 +266,15 @@ export default function Jobs() {
                     {/* Company name */}
                     <Link
                       to={`/jobs/${job.id}`}
-                      className="text-sm md:text-base font-semibold text-slate-900 tracking-tight hover:text-slate-700 transition-colors line-clamp-1 pr-16 md:pr-0 mb-0.5 md:mb-1"
+                      className="mb-0.5 line-clamp-1 pr-16 text-sm font-semibold tracking-tight text-slate-900 transition-colors hover:text-slate-700 md:pr-0 md:text-base"
                     >
                       {job.company}
                     </Link>
 
                     {/* Positions — compact chips */}
-                    <div className="flex flex-wrap items-center gap-1 mb-1.5 md:mb-2.5">
+                    <div className="mb-1.5 flex flex-wrap items-center gap-1 md:mb-2.5">
                       {positions.slice(0, 2).map((pos) => (
-                        <span key={pos} className="bg-gray-100/80 px-1.5 py-0.5 md:px-2 rounded-sm text-[10px] md:text-xs leading-tight text-gray-700">{pos}</span>
+                        <span key={pos} className="max-w-[7.75rem] truncate rounded-sm bg-gray-100 px-1.5 py-0.5 text-[10px] leading-tight text-gray-700 md:max-w-none md:px-2 md:text-xs">{pos}</span>
                       ))}
                       {positions.length > 2 && (
                         <span className="text-[10px] md:text-xs text-gray-400">+{positions.length - 2}</span>
@@ -278,18 +282,18 @@ export default function Jobs() {
                     </div>
 
                     {/* Metadata — inline with button on desktop */}
-                    <div className="flex items-center text-[10px] md:text-xs text-slate-500 leading-none md:mb-3">
-                      {job.city && (
-                        <span>{job.city.split(',')[0].split('、')[0]}</span>
+                    <div className="flex min-w-0 items-center text-[10px] leading-none text-slate-500 md:mb-3 md:text-xs">
+                      {cityLabel && (
+                        <span className="max-w-[4.75rem] truncate md:max-w-none">{cityLabel}</span>
                       )}
-                      {job.city && job.deadline && <span className="text-slate-300 mx-1 md:mx-1.5">·</span>}
+                      {cityLabel && job.deadline && <span className="mx-1 text-slate-300 md:mx-1.5">·</span>}
                       {job.deadline && (
-                        <span>{job.deadline}</span>
+                        <span className="max-w-[5.5rem] truncate md:max-w-none">{job.deadline}</span>
                       )}
-                      {job.tags.length > 0 && (job.city || job.deadline) && <span className="text-slate-300 mx-1 md:mx-1.5">·</span>}
-                      {job.tags.slice(0, 1).map((tag) => (
-                        <span key={tag}>{tag}</span>
-                      ))}
+                      {primaryTag && (cityLabel || job.deadline) && <span className="mx-1 text-slate-300 md:mx-1.5">·</span>}
+                      {primaryTag ? (
+                        <span className="max-w-[6.5rem] truncate md:max-w-none">{primaryTag}</span>
+                      ) : null}
                     </div>
 
                     {/* Desktop-only actions row */}
@@ -306,13 +310,13 @@ export default function Jobs() {
                       )}
                       <button
                         onClick={() => handleToggle(job)}
-                        disabled={importingId === job.id || removingId === job.id}
-                        className={`ml-auto flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-normal transition-colors duration-200 ${
+                        disabled={isBusy}
+                        className={`ml-auto flex items-center gap-1 border px-3 py-1.5 text-sm font-normal transition-colors duration-200 ${
                           imported
-                            ? 'text-emerald-600 border border-emerald-200 bg-emerald-50/50'
+                            ? 'border border-gray-200 bg-white text-gray-500'
                             : importingId === job.id
-                              ? 'text-white bg-slate-800'
-                              : 'text-slate-600 border border-slate-300 bg-transparent hover:bg-slate-900 hover:text-white hover:border-slate-900'
+                              ? 'bg-black text-white'
+                              : 'text-slate-600 border border-slate-300 bg-transparent hover:bg-black hover:text-white hover:border-black'
                         }`}
                       >
                         {importingId === job.id ? (
@@ -344,7 +348,7 @@ export default function Jobs() {
                 <button
                   onClick={loadMore}
                   disabled={loadingMore}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-line bg-white text-sm text-ink-muted hover:bg-tag-bg disabled:opacity-50 transition-colors"
+                  className="inline-flex items-center gap-2 border border-gray-200 bg-white px-6 py-3 text-sm text-gray-600 transition-colors hover:border-black hover:text-black disabled:opacity-50"
                 >
                   {loadingMore ? (
                     <>
@@ -379,16 +383,4 @@ export default function Jobs() {
       )}
     </div>
   )
-}
-
-/** Split a messy position string into individual position names */
-function splitPositions(title: string): string[] {
-  if (!title) return []
-  // Split by common delimiters: comma, Chinese comma, semicolon, slash, newline, spaces between CJK chars
-  const parts = title
-    .split(/[,，;；、/\n]+/)
-    .map((s) => s.trim())
-    .filter((s) => s.length >= 2 && s.length <= 20)
-  // If no split happened (single title), return as-is
-  return parts.length > 0 ? parts : [title.slice(0, 20)]
 }

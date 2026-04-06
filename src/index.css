@@ -5,21 +5,23 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", STHeiti, "Microsoft Yahei", Tahoma, Simsun, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #f9f9f6;
+  color: #1c1c1c;
 }
 
 @theme {
-  --color-page: #f7f9fc;
-  --color-brand: #18243d;
-  --color-brand-hover: #223252;
+  --color-page: #f9f9f6;
+  --color-brand: #111111;
+  --color-brand-hover: #262626;
   --color-accent: #3563ff;
   --color-accent-soft: #eef3ff;
   --color-accent-hover: #2952e0;
-  --color-ink: #1f2a3d;
-  --color-ink-muted: #6b7a90;
-  --color-line: #e6ebf2;
-  --color-line-light: #f0f3f8;
-  --color-tag-bg: #f2f5fa;
-  --color-tag-text: #5f6f86;
+  --color-ink: #1c1c1c;
+  --color-ink-muted: #6b7280;
+  --color-line: #d1d5db;
+  --color-line-light: #e5e7eb;
+  --color-tag-bg: #f3f4f6;
+  --color-tag-text: #6b7280;
   --color-ok: #2f9e68;
   --color-ok-soft: #edf8f2;
   --color-warn: #d38b1f;

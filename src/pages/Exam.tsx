@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Search, ExternalLink, FileText, Building2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Search } from 'lucide-react'
 import { useSEO } from '../hooks/useSEO'
 
 interface ExamResource {
@@ -107,132 +107,157 @@ const EXAM_DATA: ExamResource[] = [
 
 const QUICK_COMPANIES = ['全部', '腾讯', '字节跳动', '华为', '阿里巴巴', '美团', '京东', '百度']
 
+function buildMetaLine(item: ExamResource) {
+  const left = `${item.company} · ${item.year} ${item.type}`
+  const right = item.tags.join(' · ')
+  return right ? `${left} | ${right}` : left
+}
+
+function ExamArchiveItem({ item }: { item: ExamResource }) {
+  return (
+    <a
+      href={item.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group block cursor-pointer border-b border-gray-200 py-4"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 space-y-2">
+          <h3 className="text-base font-medium text-gray-900 md:text-lg">
+            {item.title}
+          </h3>
+          <p className="text-xs leading-5 text-gray-500">
+            {buildMetaLine(item)}
+          </p>
+        </div>
+
+        <span className="shrink-0 pt-0.5 text-base text-gray-900 transition-transform group-hover:translate-x-1">
+          →
+        </span>
+      </div>
+    </a>
+  )
+}
+
 export default function Exam() {
-  useSEO({ title: '笔试面试真题 - 校招助手', description: '大厂、国企、银行笔试面试真题资料汇总', path: '/exam' })
+  useSEO({
+    title: '笔试面试真题 - 校招助手',
+    description: '大厂、国企、银行笔试面试真题资料汇总',
+    path: '/exam',
+  })
+
   const [search, setSearch] = useState('')
   const [companyFilter, setCompanyFilter] = useState('全部')
 
   const filtered = useMemo(() => {
     return EXAM_DATA.filter((item) => {
       if (search) {
-        const q = search.toLowerCase()
+        const query = search.toLowerCase()
+
         if (
-          !item.title.toLowerCase().includes(q) &&
-          !item.company.toLowerCase().includes(q) &&
-          !item.tags.some((t) => t.toLowerCase().includes(q))
-        )
+          !item.title.toLowerCase().includes(query) &&
+          !item.company.toLowerCase().includes(query) &&
+          !item.tags.some((tag) => tag.toLowerCase().includes(query))
+        ) {
           return false
+        }
       }
+
       if (companyFilter !== '全部' && item.company !== companyFilter) return false
+
       return true
     })
   }, [search, companyFilter])
 
+  const [leftColumn, rightColumn] = useMemo(() => {
+    const midpoint = Math.ceil(filtered.length / 2)
+    return [filtered.slice(0, midpoint), filtered.slice(midpoint)]
+  }, [filtered])
+
   return (
-    <div className="min-h-screen bg-page">
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-ink flex items-center gap-2">
-            <FileText className="w-6 h-6 text-amber-500" />
-            笔试真题库
-          </h1>
-          <p className="text-sm text-ink-muted mt-1">
-            收录各大公司校招笔试真题资源，持续更新中
-          </p>
-        </div>
+    <div className="min-h-screen bg-[#F9F9F6]">
+      <div className="mx-auto max-w-5xl px-4 py-6 md:py-8">
+        <section className="border-b border-gray-200 pb-5 md:pb-7">
+          <p className="text-[10px] tracking-[0.28em] text-gray-400 md:text-xs">THE ARCHIVE</p>
+          <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h1 className="text-3xl font-light tracking-tight text-black md:text-5xl">
+                笔试真题库
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-600 md:text-base">
+                把分散的真题入口整理成一份可检索的目录。手机端保持高密度索引，桌面端展开成双栏档案册。
+              </p>
+            </div>
+            <p className="text-xs text-gray-500 md:text-sm">
+              当前收录 {filtered.length} 份公开资源
+            </p>
+          </div>
+        </section>
 
-        {/* Search */}
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted/70" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="搜索公司、题目或标签..."
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-line text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
-          />
-        </div>
+        <section className="pt-4 md:pt-6">
+          <div className="relative border-b border-gray-200 pb-3">
+            <Search className="absolute left-0 top-0.5 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="搜索公司、题目或关键词"
+              className="w-full bg-transparent pl-6 pr-0 text-sm text-gray-900 outline-none placeholder:text-gray-400 md:text-base"
+            />
+          </div>
 
-        {/* Company quick tags */}
-        <div className="flex flex-wrap gap-2 mb-5">
-          {QUICK_COMPANIES.map((c) => {
-            const active = companyFilter === c
-            return (
-              <button
-                key={c}
-                onClick={() => setCompanyFilter(c)}
-                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                  active
-                    ? 'bg-amber-500 text-white'
-                    : 'bg-white text-ink-muted border border-line hover:border-amber-300 hover:text-amber-600'
-                }`}
-              >
-                {c !== '全部' && <Building2 className="w-3 h-3" />}
-                {c}
-              </button>
-            )
-          })}
-        </div>
+          <div className="mt-4 flex overflow-x-auto space-x-6 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            {QUICK_COMPANIES.map((company) => {
+              const active = companyFilter === company
 
-        {/* Resource list */}
-        <div className="space-y-3">
-          {filtered.length === 0 ? (
-            <div className="text-center py-16 text-ink-muted/70">暂无匹配的真题资源</div>
-          ) : (
-            filtered.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white rounded-2xl border border-line-light shadow-sm p-4 flex items-center gap-4"
-              >
-                <div className="shrink-0 w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-amber-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-ink truncate">
-                    {item.title}
-                  </h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-ink-muted">{item.company}</span>
-                    <span className="text-xs text-line">·</span>
-                    <span className="text-xs text-ink-muted">{item.year}</span>
-                    <span className="text-xs text-line">·</span>
-                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                      item.type === '技术'
-                        ? 'bg-accent-soft text-accent'
-                        : item.type === '行测'
-                          ? 'bg-emerald-50 text-emerald-600'
-                          : 'bg-violet-50 text-violet-600'
-                    }`}>
-                      {item.type}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    {item.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-1.5 py-0.5 rounded text-[11px] bg-tag-bg text-ink-muted"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="shrink-0 flex items-center gap-1 px-3 py-2 rounded-lg bg-amber-50 text-amber-600 text-xs font-medium hover:bg-amber-100 transition-colors"
+              return (
+                <button
+                  key={company}
+                  onClick={() => setCompanyFilter(company)}
+                  className={`shrink-0 border-b-2 pb-1 text-sm transition-colors ${
+                    active
+                      ? 'border-black font-semibold text-black'
+                      : 'border-transparent text-gray-500 hover:text-black'
+                  }`}
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  前往
-                </a>
-              </div>
-            ))
-          )}
-        </div>
+                  {company}
+                </button>
+              )
+            })}
+          </div>
+        </section>
 
-        <p className="text-center text-xs text-ink-muted/70 mt-8 pb-4">
+        <section className="pt-3 md:pt-5">
+          {filtered.length === 0 ? (
+            <div className="border-b border-gray-200 py-10 text-sm text-gray-500">
+              暂无匹配的真题资源
+            </div>
+          ) : (
+            <>
+              <div className="md:hidden">
+                {filtered.map((item) => (
+                  <ExamArchiveItem key={item.id} item={item} />
+                ))}
+              </div>
+
+              <div className="hidden md:grid md:grid-cols-2 md:gap-12">
+                <div>
+                  {leftColumn.map((item) => (
+                    <ExamArchiveItem key={item.id} item={item} />
+                  ))}
+                </div>
+
+                <div className="md:border-l md:border-gray-200 md:pl-12">
+                  {rightColumn.map((item) => (
+                    <ExamArchiveItem key={item.id} item={item} />
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </section>
+
+        <p className="pt-6 text-center text-xs text-gray-500">
           资源链接来自牛客等公开平台，持续收录中
         </p>
       </div>

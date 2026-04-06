@@ -20,7 +20,7 @@ export function BottomNav() {
   }
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-line-light"
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-[#F9F9F6]/95 backdrop-blur-sm md:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
       <div className="flex h-14">
         {tabs.map((tab) => {
@@ -34,10 +34,12 @@ export function BottomNav() {
             <NavLink
               key={tab.to}
               to={tab.to}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5"
+              className={`flex flex-1 flex-col items-center justify-center gap-0.5 border-t-2 transition-colors ${
+                isActive ? 'border-black' : 'border-transparent'
+              }`}
             >
-              <tab.icon className={`w-[22px] h-[22px] ${isActive ? 'text-accent' : 'text-ink-muted'}`} />
-              <span className={`text-[11px] ${isActive ? 'text-accent font-medium' : 'text-ink-muted'}`}>
+              <tab.icon className={`w-[22px] h-[22px] ${isActive ? 'text-black' : 'text-gray-500'}`} />
+              <span className={`text-[11px] tracking-[0.08em] ${isActive ? 'font-medium text-black' : 'text-gray-500'}`}>
                 {tab.label}
               </span>
             </NavLink>

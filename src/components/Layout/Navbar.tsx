@@ -1,14 +1,14 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Search, Kanban, BarChart3, CreditCard, FileText, LogIn, LogOut, Bell } from 'lucide-react'
+import { Kanban } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { prefetchJobs } from '../../lib/prefetch'
 
 const navItems = [
-  { to: '/jobs', icon: Search, label: '找职位' },
-  { to: '/board', icon: Kanban, label: '我的投递' },
-  { to: '/dashboard', icon: BarChart3, label: '进度概览' },
-  { to: '/pricing', icon: CreditCard, label: '升级计划' },
-  { to: '/exam', icon: FileText, label: '笔试真题' },
+  { to: '/jobs', label: '找职位' },
+  { to: '/board', label: '我的投递' },
+  { to: '/dashboard', label: '进度概览' },
+  { to: '/pricing', label: '升级计划' },
+  { to: '/exam', label: '笔试真题' },
 ]
 
 export function Navbar() {
@@ -16,16 +16,14 @@ export function Navbar() {
   const { user, signOut } = useAuth()
 
   return (
-    <nav className="sticky top-0 z-50 bg-[#F4F4F0]/80 backdrop-blur-md border-b border-[#1C1C1C]/8">
-      <div className="max-w-5xl mx-auto px-4 md:px-8 h-14 flex items-center justify-between">
-        {/* Logo */}
+    <nav className="sticky top-0 z-50 border-b border-[#1C1C1C]/8 bg-[#F4F4F0]/80 backdrop-blur-sm">
+      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 md:px-8">
         <Link to="/" className="flex items-center gap-2 font-semibold text-[#1C1C1C]">
-          <Kanban className="w-5 h-5" />
+          <Kanban className="h-5 w-5" />
           <span className="text-base">校招助手</span>
         </Link>
 
-        {/* Desktop nav — editorial: muted, no bg on hover, just color shift */}
-        <div className="hidden md:flex items-center gap-0.5">
+        <div className="hidden items-center gap-6 md:flex">
           {navItems.map((item) => {
             const active = pathname.startsWith(item.to)
             return (
@@ -33,45 +31,34 @@ export function Navbar() {
                 key={item.to}
                 to={item.to}
                 onMouseEnter={item.to === '/jobs' ? prefetchJobs : undefined}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm transition-colors duration-200 ${
+                className={`border-b pb-1 text-sm transition-colors duration-200 ${
                   active
-                    ? 'text-[#1C1C1C] font-medium'
-                    : 'text-[#1C1C1C]/45 hover:text-[#1C1C1C]'
+                    ? 'border-[#1C1C1C] font-medium text-[#1C1C1C]'
+                    : 'border-transparent text-[#1C1C1C]/45 hover:text-[#1C1C1C]'
                 }`}
               >
-                <item.icon className="w-3.5 h-3.5" />
                 {item.label}
               </Link>
             )
           })}
         </div>
 
-        {/* Desktop auth — editorial: minimal, no bg button */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:block">
           {user ? (
             <button
               onClick={signOut}
-              className="flex items-center gap-1 text-sm text-[#1C1C1C]/40 hover:text-[#1C1C1C] transition-colors duration-200"
+              className="text-sm text-[#1C1C1C]/45 underline underline-offset-[6px] decoration-[#1C1C1C]/12 transition-all hover:text-[#1C1C1C] hover:decoration-[#1C1C1C]"
             >
-              <LogOut className="w-3.5 h-3.5" />
               退出
             </button>
           ) : (
             <Link
               to="/login"
-              className="flex items-center gap-1 text-sm text-[#1C1C1C] px-4 py-1.5 rounded-md border border-[#1C1C1C]/15 hover:border-[#1C1C1C]/40 transition-colors duration-200"
+              className="text-sm text-[#1C1C1C] underline underline-offset-[6px] decoration-[#1C1C1C]/12 transition-all hover:decoration-[#1C1C1C]"
             >
-              <LogIn className="w-3.5 h-3.5" />
               登录
             </Link>
           )}
-        </div>
-
-        {/* Mobile right side */}
-        <div className="md:hidden flex items-center gap-2">
-          <button className="p-2 text-[#1C1C1C]/40">
-            <Bell className="w-5 h-5" />
-          </button>
         </div>
       </div>
     </nav>

@@ -14,19 +14,19 @@ const ERROR_MAP: Record<string, string> = {
   'For security purposes, you can only request this after': '操作过于频繁，请稍后再试',
 }
 
-function translateError(msg: string): string {
-  // Exact match
-  if (ERROR_MAP[msg]) return ERROR_MAP[msg]
-  // Partial match
+function translateError(message: string): string {
+  if (ERROR_MAP[message]) return ERROR_MAP[message]
+
   for (const [key, value] of Object.entries(ERROR_MAP)) {
-    if (msg.includes(key)) return value
+    if (message.includes(key)) return value
   }
-  // Fallback: show original if no match
-  return msg
+
+  return message
 }
 
 export default function Login() {
   useSEO({ title: '登录 - 校招助手', path: '/login' })
+
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -36,11 +36,10 @@ export default function Login() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const rawRedirect = searchParams.get('redirect') || '/jobs'
-  // Validate redirect is a relative path
   const redirectTo = rawRedirect.startsWith('/') ? rawRedirect : '/jobs'
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
     setError('')
     setLoading(true)
 
@@ -49,7 +48,6 @@ export default function Login() {
       if (result.error) {
         setError(translateError(result.error.message))
       } else {
-        // Email verification is disabled — sign in directly after signup
         const loginResult = await signIn(email, password)
         if (loginResult.error) {
           setError(translateError(loginResult.error.message))
@@ -65,83 +63,122 @@ export default function Login() {
         navigate(redirectTo)
       }
     }
+
     setLoading(false)
   }
 
   return (
-    <div className="min-h-screen bg-page flex items-start pt-20 md:items-center md:pt-0 justify-center px-4">
-      <div className="w-full max-w-sm">
-        {/* Mobile back arrow */}
+    <div className="min-h-screen bg-page px-3 py-4 md:px-4 md:py-10">
+      <div className="mx-auto max-w-5xl">
         <button
           onClick={() => navigate(-1)}
-          className="md:hidden flex items-center gap-1 text-sm text-ink-muted mb-4 -ml-1"
+          className="mb-4 inline-flex items-center gap-1 text-sm text-gray-500 transition-colors hover:text-black md:mb-6"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="h-4 w-4" />
           返回
         </button>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-line-light p-6">
-          <h1 className="text-xl font-bold text-ink text-center mb-6">
-            {isSignUp ? '创建账号' : '登录校招助手'}
-          </h1>
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] md:gap-12">
+          <section className="border-b border-gray-200 pb-4 md:border-b-0 md:pb-0">
+            <p className="text-[10px] tracking-[0.28em] text-gray-400 md:text-xs">ACCOUNT</p>
+            <h1 className="mt-2 font-serif text-[32px] font-semibold tracking-tight text-gray-900 md:text-5xl">
+              {isSignUp ? '创建你的校招工作台' : '登录校招助手'}
+            </h1>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-gray-600 md:mt-4 md:text-base">
+              用一套更有秩序的方式管理职位、看板和提醒。注册后会自动登录，继续回到你刚才的页面。
+            </p>
 
-          {/* Tabs */}
-          <div className="flex bg-tag-bg rounded-lg p-0.5 mb-6">
-            <button
-              onClick={() => { setIsSignUp(false); setError('') }}
-              className={`flex-1 py-2.5 text-sm rounded-md transition-colors ${
-                !isSignUp ? 'bg-white shadow-sm text-ink font-medium' : 'text-ink-muted'
-              }`}
-            >
-              登录
-            </button>
-            <button
-              onClick={() => { setIsSignUp(true); setError('') }}
-              className={`flex-1 py-2.5 text-sm rounded-md transition-colors ${
-                isSignUp ? 'bg-white shadow-sm text-ink font-medium' : 'text-ink-muted'
-              }`}
-            >
-              注册
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm text-ink-muted mb-1">邮箱</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-3 py-2.5 rounded-lg border border-line text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                placeholder="your@email.com"
-              />
+            <div className="mt-5 space-y-3 border-t border-gray-200 pt-4 md:mt-8 md:space-y-4 md:pt-5">
+              <div className="border-b border-gray-200 pb-3 md:pb-4">
+                <p className="text-sm font-medium text-gray-900">职位池同步</p>
+                <p className="mt-1 text-sm leading-6 text-gray-500">
+                  登录后，导入的岗位、笔记和提醒都会和账号绑定。
+                </p>
+              </div>
+              <div className="border-b border-gray-200 pb-3 md:pb-4">
+                <p className="text-sm font-medium text-gray-900">看板持续更新</p>
+                <p className="mt-1 text-sm leading-6 text-gray-500">
+                  你在任意设备上的状态拖拽和编辑都会同步保存。
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">低噪音工作流</p>
+                <p className="mt-1 text-sm leading-6 text-gray-500">
+                  把分散的收藏夹、备忘录和聊天记录，统一收进一个申请系统。
+                </p>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm text-ink-muted mb-1">密码</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="w-full px-3 py-2.5 rounded-lg border border-line text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                placeholder="至少 6 位"
-              />
+          </section>
+
+          <section className="border border-gray-200 bg-white px-4 py-4 shadow-none md:p-7">
+            <div className="flex gap-6 border-b border-gray-200 pb-2">
+              <button
+                onClick={() => {
+                  setIsSignUp(false)
+                  setError('')
+                }}
+                className={`border-b-2 pb-2 text-sm transition-colors ${
+                  !isSignUp
+                    ? 'border-black font-semibold text-black'
+                    : 'border-transparent text-gray-500 hover:text-black'
+                }`}
+              >
+                登录
+              </button>
+              <button
+                onClick={() => {
+                  setIsSignUp(true)
+                  setError('')
+                }}
+                className={`border-b-2 pb-2 text-sm transition-colors ${
+                  isSignUp
+                    ? 'border-black font-semibold text-black'
+                    : 'border-transparent text-gray-500 hover:text-black'
+                }`}
+              >
+                注册
+              </button>
             </div>
 
-            {error && (
-              <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
-            )}
+            <form onSubmit={handleSubmit} className="mt-5 space-y-3.5 md:mt-6 md:space-y-4">
+              <div>
+                <label className="mb-1.5 block text-sm text-gray-500">邮箱</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
+                  className="w-full border border-gray-200 bg-transparent px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-black md:py-3"
+                  placeholder="your@email.com"
+                />
+              </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-brand text-white py-3 rounded-xl text-sm font-semibold hover:bg-brand-hover disabled:opacity-50 transition-colors"
-            >
-              {loading ? '处理中...' : isSignUp ? '注册' : '登录'}
-            </button>
-          </form>
+              <div>
+                <label className="mb-1.5 block text-sm text-gray-500">密码</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full border border-gray-200 bg-transparent px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-black md:py-3"
+                  placeholder="至少 6 位"
+                />
+              </div>
+
+              {error ? (
+                <p className="border border-red-200 px-3 py-2.5 text-sm text-red-600 md:py-3">{error}</p>
+              ) : null}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-black px-8 py-3.5 text-sm font-bold tracking-[0.2em] text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400 md:py-4"
+              >
+                {loading ? '处理中...' : isSignUp ? '创建账号' : '立即登录'}
+              </button>
+            </form>
+          </section>
         </div>
       </div>
     </div>

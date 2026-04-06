@@ -62,12 +62,12 @@ export const EXPORT_ASPECT_OPTIONS: {
   {
     value: '3:4',
     label: '3:4',
-    description: '更像一张杂志化报表卡，适合图文封面。',
+    description: '报表版',
   },
   {
     value: '9:16',
     label: '9:16',
-    description: '更像竖版分享卡，适合手机全屏查看。',
+    description: '全屏版',
   },
 ]
 

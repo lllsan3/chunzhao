@@ -1,10 +1,19 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react'
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarClock, Loader2, MapPin } from 'lucide-react'
+import { CalendarClock, Download, Loader2, MapPin } from 'lucide-react'
+import { toBlob } from 'html-to-image'
 import { useSEO } from '../hooks/useSEO'
 import { useApplications } from '../hooks/useApplications'
 import { StatusBadge } from '../components/StatusBadge'
+import { useToast } from '../components/Toast'
+import { ExportCard } from '../components/export/ExportCard'
+import { ExportCardSheet } from '../components/export/ExportCardSheet'
 import { supabase } from '../lib/supabase'
+import {
+  buildExportCardData,
+  type ExportAspect,
+  type ExportCardType,
+} from '../lib/exportCards'
 import { getCached, setCache } from '../lib/queryCache'
 import { splitPositions } from '../lib/splitPositions'
 import type { ApplicationStatus } from '../lib/constants'
@@ -132,8 +141,14 @@ export default function Dashboard() {
   useSEO({ title: '进度概览 - 校招助手', path: '/dashboard' })
 
   const { applications, loading } = useApplications()
+  const { toast } = useToast()
   const jobStats = useJobStats()
   const countdown = useMemo(() => getCountdown(), [])
+  const exportCardRef = useRef<HTMLDivElement | null>(null)
+  const [exportOpen, setExportOpen] = useState(false)
+  const [exportType, setExportType] = useState<ExportCardType>('recent-applications')
+  const [exportAspect, setExportAspect] = useState<ExportAspect>('9:16')
+  const [exporting, setExporting] = useState(false)
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -221,6 +236,59 @@ export default function Dashboard() {
       ]
     : []
 
+  const exportCardData = useMemo(
+    () =>
+      buildExportCardData({
+        type: exportType,
+        applications,
+        reminders,
+        statusCounts,
+      }),
+    [applications, exportType, reminders, statusCounts]
+  )
+
+  const handleExport = async () => {
+    const node = exportCardRef.current
+    if (!node) {
+      toast('error', '导出卡片还没有准备好，请稍后再试')
+      return
+    }
+
+    setExporting(true)
+
+    try {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      })
+
+      const blob = await toBlob(node, {
+        cacheBust: true,
+        pixelRatio: 3,
+        backgroundColor: '#F9F9F6',
+      })
+
+      if (!blob) throw new Error('blob_empty')
+
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      const fileDate = new Intl.DateTimeFormat('sv-SE').format(new Date())
+
+      link.href = url
+      link.download = `校招助手-${exportCardData.fileSlug}-${exportAspect.replace(':', 'x')}-${fileDate}.png`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+
+      setExportOpen(false)
+      toast('success', '图片已开始下载')
+    } catch {
+      toast('error', '导出失败，请稍后重试')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F9F9F6] text-slate-500">
@@ -246,6 +314,16 @@ export default function Dashboard() {
                 手机端先看进度脉络，再把桌面端展开成一页干净的投递报表。
               </p>
             </div>
+            {applications.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => setExportOpen(true)}
+                className="inline-flex items-center gap-1.5 self-start border border-gray-200 bg-white px-3 py-2 text-[11px] font-medium tracking-[0.14em] text-slate-700 transition-colors hover:border-black hover:text-black md:self-auto md:px-4 md:py-2.5 md:text-sm"
+              >
+                <Download className="h-3.5 w-3.5" />
+                导出报表
+              </button>
+            ) : null}
             <p className="hidden text-[11px] text-slate-500 md:block md:text-sm">
               最近 7 天提醒 {reminders.length} 条
             </p>
@@ -640,7 +718,22 @@ export default function Dashboard() {
             </div>
           </section>
         ) : null}
+
+        <div className="pointer-events-none fixed -left-[9999px] top-0 opacity-0" aria-hidden="true">
+          <ExportCard ref={exportCardRef} aspect={exportAspect} data={exportCardData} />
+        </div>
       </div>
+
+      <ExportCardSheet
+        open={exportOpen}
+        type={exportType}
+        aspect={exportAspect}
+        exporting={exporting}
+        onClose={() => setExportOpen(false)}
+        onTypeChange={setExportType}
+        onAspectChange={setExportAspect}
+        onSubmit={handleExport}
+      />
     </div>
   )
 }

@@ -1,10 +1,11 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link, Outlet } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { Navbar } from './components/Layout/Navbar'
 import { BottomNav } from './components/BottomNav'
 import { ToastProvider } from './components/Toast'
 import { AuthProvider } from './contexts/AuthContext'
+import { ApplicationsProvider } from './hooks/useApplications'
 import { supabaseConfigError } from './lib/supabase'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
@@ -49,6 +50,14 @@ function NotFound() {
   )
 }
 
+function ApplicationsBoundary() {
+  return (
+    <ApplicationsProvider>
+      <Outlet />
+    </ApplicationsProvider>
+  )
+}
+
 export default function App() {
   if (supabaseConfigError) {
     return (
@@ -74,35 +83,37 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/jobs" element={<Jobs />} />
-                <Route path="/jobs/:jobId" element={<JobDetail />} />
-                <Route
-                  path="/applications/:applicationId"
-                  element={
-                    <ProtectedRoute>
-                      <ApplicationDetail />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/board"
-                  element={
-                    <ProtectedRoute fallback={<BoardPreview />}>
-                      <Board />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/exam" element={<Exam />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route element={<ApplicationsBoundary />}>
+                  <Route path="/jobs" element={<Jobs />} />
+                  <Route path="/jobs/:jobId" element={<JobDetail />} />
+                  <Route
+                    path="/applications/:applicationId"
+                    element={
+                      <ProtectedRoute>
+                        <ApplicationDetail />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/board"
+                    element={
+                      <ProtectedRoute fallback={<BoardPreview />}>
+                        <Board />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

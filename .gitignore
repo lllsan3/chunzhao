@@ -26,3 +26,4 @@ dist-ssr
 .vercel
 .playwright-cli/
 output/playwright/
+output/offerstar_week_20260403_20260409_chunk_*.sql

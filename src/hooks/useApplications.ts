@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { createContext, createElement, useCallback, useContext, useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { getCached, setCache, invalidateCache } from '../lib/queryCache'
 import { useAuth } from './useAuth'
 import type { ApplicationStatus } from '../lib/constants'
-import type { RealtimeChannel } from '@supabase/supabase-js'
 
 export interface Application {
   id: string
@@ -25,9 +25,40 @@ export interface Application {
 const CACHE_KEY = 'applications'
 const FREE_LIMIT = 3
 
-export function useApplications() {
+interface ApplicationsContextValue {
+  applications: Application[]
+  loading: boolean
+  isAtFreeLimit: boolean
+  importJob: (job: {
+    id: string
+    title: string
+    company: string
+    city: string | null
+    deadline: string | null
+    jd_url: string | null
+  }) => Promise<{ error: { message: string } | null }>
+  manualAdd: (fields: {
+    title: string
+    company: string
+    city?: string
+    deadline?: string
+    jd_url?: string
+  }) => Promise<{ error: { message: string } | null }>
+  updateStatus: (id: string, status: ApplicationStatus) => Promise<{ error: { message: string } | null }>
+  updateNotes: (id: string, notes: string) => Promise<{ error: { message: string } | null }>
+  updateReminder: (
+    id: string,
+    reminder_date: string | null,
+    reminder_note: string | null
+  ) => Promise<{ error: { message: string } | null }>
+  deleteApplication: (id: string) => Promise<{ error: { message: string } | null }>
+  refetch: () => Promise<void>
+}
+
+const ApplicationsContext = createContext<ApplicationsContextValue | null>(null)
+
+function useProvideApplications(): ApplicationsContextValue {
   const { user } = useAuth()
-  const channelRef = useRef<RealtimeChannel | null>(null)
 
   const [applications, setApplications] = useState<Application[]>(() => {
     const cached = getCached<Application[]>(CACHE_KEY)
@@ -152,11 +183,8 @@ export function useApplications() {
       )
       .subscribe()
 
-    channelRef.current = channel
-
     return () => {
       supabase.removeChannel(channel)
-      channelRef.current = null
     }
   }, [user])
 
@@ -386,4 +414,20 @@ export function useApplications() {
     deleteApplication,
     refetch: fetchApplications,
   }
+}
+
+export function ApplicationsProvider({ children }: { children: ReactNode }) {
+  const value = useProvideApplications()
+
+  return createElement(ApplicationsContext.Provider, { value }, children)
+}
+
+export function useApplications() {
+  const context = useContext(ApplicationsContext)
+
+  if (!context) {
+    throw new Error('useApplications 必须在 ApplicationsProvider 内使用')
+  }
+
+  return context
 }

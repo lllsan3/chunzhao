@@ -1,0 +1,349 @@
+{
+  "range": {
+    "start": "2026-04-03T00:00:00+08:00",
+    "end": "2026-04-09T23:59:59+08:00"
+  },
+  "fetched_records": 300,
+  "within_range_records": 265,
+  "after_local_dedupe": 265,
+  "skipped_existing_exact_matches": 10,
+  "final_records": 255,
+  "generated_sql_files": [
+    "output\\offerstar_week_20260403_20260409_chunk_0.sql",
+    "output\\offerstar_week_20260403_20260409_chunk_1.sql",
+    "output\\offerstar_week_20260403_20260409_chunk_2.sql",
+    "output\\offerstar_week_20260403_20260409_chunk_3.sql",
+    "output\\offerstar_week_20260403_20260409_chunk_4.sql",
+    "output\\offerstar_week_20260403_20260409_chunk_5.sql",
+    "output\\offerstar_week_20260403_20260409_chunk_6.sql",
+    "output\\offerstar_week_20260403_20260409_chunk_7.sql",
+    "output\\offerstar_week_20260403_20260409_chunk_8.sql",
+    "output\\offerstar_week_20260403_20260409_chunk_9.sql",
+    "output\\offerstar_week_20260403_20260409_chunk_10.sql"
+  ],
+  "stats": {
+    "with_company_type": 131,
+    "with_target_graduates": 71,
+    "with_deadline_date": 0,
+    "internships": 54,
+    "big_company_tag": 13
+  },
+  "skipped_existing_samples": [
+    {
+      "company": "腾讯",
+      "title": "技术类产品类设计类市场类职能类"
+    },
+    {
+      "company": "瑞丰银行",
+      "title": "博士培训生、管理培训生、科技培训生、综合培训生、厅堂运营岗(绍兴)、厅堂运营岗(义乌)、微贷直营客户经理"
+    },
+    {
+      "company": "烟台银行",
+      "title": "管理培训生运营支持岗"
+    },
+    {
+      "company": "浙江新东方",
+      "title": "高中班课教师,学习机主讲教师,高中一对一教师,综合托管教师,益智教师,创客教师,塔尖（双语）教师,博文教师,答疑班主任,学习管理师"
+    },
+    {
+      "company": "中国中煤",
+      "title": "煤炭、电力、煤化工、新能源、装备设计制造、矿建设计施工、经营管理、专业技术、技能操作（相关专业：煤炭矿业类 化工技术类 能源动力类 新能源类 机械机电类 电力电气类 电子信息类 环境科学与工程类 自动......"
+    },
+    {
+      "company": "普华永道",
+      "title": "审计及鉴证服务税务服务咨询服务"
+    },
+    {
+      "company": "浙江移动",
+      "title": "技术类：【金种子】AI大模型算法工程师、AI工程师、AI产品经理、大数据工程师、系统开发工程师、通信网络工程师、动力运行维护工程师；市场政企类：高级客户经理、政企解决方案经理、销售运营及管理、数字化产品运营；综合类：财务管理、法律合规管理、党建管理、人力资源管理"
+    },
+    {
+      "company": "天弘基金",
+      "title": "行业研究,债券交易,互金业务经理,金融工程岗,机构销售,渠道销售,银行线上业务经理,产品经理"
+    },
+    {
+      "company": "虎牙",
+      "title": "产品类运营类技术类设计类;"
+    },
+    {
+      "company": "美团战略与投资平台",
+      "title": "战略与投资分析师"
+    }
+  ],
+  "sample_records": [
+    {
+      "title": "海外销售方向 产品技术方向",
+      "company": "艾比森",
+      "city": "深圳、惠州",
+      "deadline": "尽快投递",
+      "deadline_date": null,
+      "tags": [
+        "电子",
+        "半导体"
+      ],
+      "jd_url": "https://mp.weixin.qq.com/s/9HMXegCfJTIODkE00pL-Fw",
+      "status": "open",
+      "company_type": null,
+      "target_graduates": "2026届",
+      "recruitment_type": "春招",
+      "industry": "电子/半导体",
+      "source": "offerstar",
+      "source_record_id": "offerstar-6a0a1fb669cf782802c44d702c32495d",
+      "notice_url": "https://mp.weixin.qq.com/s/9HMXegCfJTIODkE00pL-Fw",
+      "referral_code": null,
+      "updated_at": "2026-04-03T16:19:52+08:00",
+      "raw_title": "至真少年，与艾同行 | 艾比森 2026 届春招补录全面启动",
+      "raw_positions": "海外销售方向 产品技术方向",
+      "raw_work_location": "深圳惠州",
+      "raw_deadline": "",
+      "updated_label": "04-03"
+    },
+    {
+      "title": "产品工程师、设计工程师、电气工程师研发工程师、验证工程师、测试工程师",
+      "company": "安道拓重庆",
+      "city": "重庆、合肥",
+      "deadline": "尽快投递",
+      "deadline_date": null,
+      "tags": [
+        "车企",
+        "汽车零部件"
+      ],
+      "jd_url": "https://mp.weixin.qq.com/s/io9Os6J3mf-VyQvbF3w4QA",
+      "status": "open",
+      "company_type": null,
+      "target_graduates": "2026届",
+      "recruitment_type": "校招",
+      "industry": "车企/汽车零部件",
+      "source": "offerstar",
+      "source_record_id": "offerstar-6a0a1fb669cf782802c44d9c01444b5d",
+      "notice_url": "https://mp.weixin.qq.com/s/io9Os6J3mf-VyQvbF3w4QA",
+      "referral_code": null,
+      "updated_at": "2026-04-03T16:19:52+08:00",
+      "raw_title": "安乘于道 拓启未来 | 安道拓重庆 2026 届春季校园招聘全面启动！",
+      "raw_positions": "产品工程师、设计工程师、电气工程师研发工程师、验证工程师、测试工程师",
+      "raw_work_location": "重庆 合肥",
+      "raw_deadline": "",
+      "updated_label": "04-03"
+    },
+    {
+      "title": "艺人内容策划执行实习生分区内容策划执行实习生 招商助理实习生 制作执行实习生产品实习生平面设计实习生;",
+      "company": "哔哩哔哩",
+      "city": "上海",
+      "deadline": "尽快投递",
+      "deadline_date": null,
+      "tags": [
+        "民营企业",
+        "互联网",
+        "人工智能",
+        "大厂"
+      ],
+      "jd_url": "https://mp.weixin.qq.com/s/uWae_pQZMX5APh2Zvp_48g",
+      "status": "open",
+      "company_type": "民营企业",
+      "target_graduates": null,
+      "recruitment_type": "实习",
+      "industry": "互联网/人工智能",
+      "source": "offerstar",
+      "source_record_id": "offerstar-6a0a1fb669cf782802c44da92a7f63f8",
+      "notice_url": "https://mp.weixin.qq.com/s/uWae_pQZMX5APh2Zvp_48g",
+      "referral_code": null,
+      "updated_at": "2026-04-03T16:19:52+08:00",
+      "raw_title": "2026 BW 项目实习生招募启动！",
+      "raw_positions": "艺人内容策划执行实习生分区内容策划执行实习生 招商助理实习生 制作执行实习生产品实习生平面设计实习生;",
+      "raw_work_location": "上海",
+      "raw_deadline": "",
+      "updated_label": "04-03"
+    },
+    {
+      "title": "数字化战略方向研发创新方向战略规划方向 市场与品牌战略方向;",
+      "company": "博西家电",
+      "city": "南京",
+      "deadline": "尽快投递",
+      "deadline_date": null,
+      "tags": [
+        "电器",
+        "家电"
+      ],
+      "jd_url": "https://mp.weixin.qq.com/s/hlqlLKD1tr65cYRd1lzaPg",
+      "status": "open",
+      "company_type": null,
+      "target_graduates": null,
+      "recruitment_type": "实习",
+      "industry": "电器/家电",
+      "source": "offerstar",
+      "source_record_id": "offerstar-6a0a1fb669cf782802c44da707e53442",
+      "notice_url": "https://mp.weixin.qq.com/s/hlqlLKD1tr65cYRd1lzaPg",
+      "referral_code": null,
+      "updated_at": "2026-04-03T16:19:52+08:00",
+      "raw_title": "博西家电青年人才计划 “战略实习生” 项目正式启动！",
+      "raw_positions": "数字化战略方向研发创新方向战略规划方向 市场与品牌战略方向;",
+      "raw_work_location": "南京",
+      "raw_deadline": "",
+      "updated_label": "04-03"
+    },
+    {
+      "title": "医学科研仪器销售产品营销管培生海外销售专员",
+      "company": "成都泰盟",
+      "city": "成都",
+      "deadline": "尽快投递",
+      "deadline_date": null,
+      "tags": [
+        "生物制药",
+        "生命科学"
+      ],
+      "jd_url": "https://mp.weixin.qq.com/s/KJoeWWe3tAoz812s3s8Ccg?scene=1",
+      "status": "open",
+      "company_type": null,
+      "target_graduates": null,
+      "recruitment_type": "校招",
+      "industry": "生物制药/生命科学",
+      "source": "offerstar",
+      "source_record_id": "offerstar-6a0a1fb669cf782802c44d54710b5411",
+      "notice_url": "https://mp.weixin.qq.com/s/KJoeWWe3tAoz812s3s8Ccg?scene=1",
+      "referral_code": null,
+      "updated_at": "2026-04-03T16:19:52+08:00",
+      "raw_title": "成都泰盟 2026 年春季校园招聘",
+      "raw_positions": "医学科研仪器销售产品营销管培生海外销售专员",
+      "raw_work_location": "成都",
+      "raw_deadline": "",
+      "updated_label": "04-03"
+    },
+    {
+      "title": "项目发展部实习生,品牌传播实习生",
+      "company": "慈缘基金会",
+      "city": "北京",
+      "deadline": "尽快投递",
+      "deadline_date": null,
+      "tags": [],
+      "jd_url": "https://mp.weixin.qq.com/s/OODT8YT_wZW_zREw8x6QmA",
+      "status": "open",
+      "company_type": null,
+      "target_graduates": null,
+      "recruitment_type": "实习",
+      "industry": "其他",
+      "source": "offerstar",
+      "source_record_id": "offerstar-6a0a1fb669cf782802c44dad02328bfe",
+      "notice_url": "https://mp.weixin.qq.com/s/OODT8YT_wZW_zREw8x6QmA",
+      "referral_code": null,
+      "updated_at": "2026-04-03T16:19:52+08:00",
+      "raw_title": "寻找同行的你 | 慈缘基金会 2026 年实习生开始招聘啦！",
+      "raw_positions": "项目发展部实习生,品牌传播实习生",
+      "raw_work_location": "北京",
+      "raw_deadline": "",
+      "updated_label": "04-03"
+    },
+    {
+      "title": "广告投放专员硬核投放专员AE视频设计师 平面设计师",
+      "company": "大蓝游戏",
+      "city": "广州",
+      "deadline": "尽快投递",
+      "deadline_date": null,
+      "tags": [
+        "互联网",
+        "人工智能"
+      ],
+      "jd_url": "https://mp.weixin.qq.com/s/MmV794b6NcdyCrui1kswvA?scene=1&click_id=38",
+      "status": "open",
+      "company_type": null,
+      "target_graduates": null,
+      "recruitment_type": "校招",
+      "industry": "互联网/人工智能",
+      "source": "offerstar",
+      "source_record_id": "offerstar-6a0a1fb669cf782802c44d6f484bb105",
+      "notice_url": "https://mp.weixin.qq.com/s/MmV794b6NcdyCrui1kswvA?scene=1&click_id=38",
+      "referral_code": null,
+      "updated_at": "2026-04-03T16:19:52+08:00",
+      "raw_title": "大蓝游戏 2026 校园招聘正式启动！",
+      "raw_positions": "广告投放专员硬核投放专员AE视频设计师 平面设计师",
+      "raw_work_location": "广州",
+      "raw_deadline": "",
+      "updated_label": "04-03"
+    },
+    {
+      "title": "审计与鉴证税务与商务咨询咨询",
+      "company": "德勤全球交付中心",
+      "city": "广州、重庆、大连",
+      "deadline": "尽快投递",
+      "deadline_date": null,
+      "tags": [
+        "外企",
+        "商务服务",
+        "咨询",
+        "大厂"
+      ],
+      "jd_url": "https://mp.weixin.qq.com/s/w6kukBx1hpfvKc6VQp4cLw",
+      "status": "open",
+      "company_type": "外企",
+      "target_graduates": null,
+      "recruitment_type": "校招",
+      "industry": "商务服务/咨询",
+      "source": "offerstar",
+      "source_record_id": "offerstar-6a0a1fb669cf782802c44d996bfc5d80",
+      "notice_url": "https://mp.weixin.qq.com/s/w6kukBx1hpfvKc6VQp4cLw",
+      "referral_code": null,
+      "updated_at": "2026-04-03T16:19:52+08:00",
+      "raw_title": "德勤全球交付中心 2026 春季校园招聘正式启动",
+      "raw_positions": "审计与鉴证税务与商务咨询咨询",
+      "raw_work_location": "重庆广州大连",
+      "raw_deadline": "",
+      "updated_label": "04-03"
+    },
+    {
+      "title": "工程类算法类数据类运营类产品类机器人类安全技术类专业职能类效能管理类金融模型类商业分析类;",
+      "company": "滴滴",
+      "city": "北京、上海、广州、杭州",
+      "deadline": "尽快投递",
+      "deadline_date": null,
+      "tags": [
+        "民营企业",
+        "互联网",
+        "人工智能",
+        "大厂"
+      ],
+      "jd_url": "https://mp.weixin.qq.com/s/YYxhM11gAYuQh-y3YvtCDA",
+      "status": "open",
+      "company_type": "民营企业",
+      "target_graduates": "2027届",
+      "recruitment_type": "实习",
+      "industry": "互联网/人工智能",
+      "source": "offerstar",
+      "source_record_id": "offerstar-6a0a1fb669cf782802c44d782cfe7410",
+      "notice_url": "https://mp.weixin.qq.com/s/YYxhM11gAYuQh-y3YvtCDA",
+      "referral_code": null,
+      "updated_at": "2026-04-03T16:19:52+08:00",
+      "raw_title": "滴滴 2027 届秋招储备实习生项目正式启动！",
+      "raw_positions": "工程类算法类数据类运营类产品类机器人类安全技术类专业职能类效能管理类金融模型类商业分析类;",
+      "raw_work_location": "北京上海广州杭州",
+      "raw_deadline": "",
+      "updated_label": "04-03"
+    },
+    {
+      "title": "AI类研发类运营类小语种类剪辑/编导类;",
+      "company": "点众科技",
+      "city": "北京、广州、杭州",
+      "deadline": "尽快投递",
+      "deadline_date": null,
+      "tags": [
+        "民营企业",
+        "互联网",
+        "人工智能"
+      ],
+      "jd_url": "https://mp.weixin.qq.com/s/SPpfuen2iP2CKcd9ur6zZA",
+      "status": "open",
+      "company_type": "民营企业",
+      "target_graduates": null,
+      "recruitment_type": "实习",
+      "industry": "互联网/人工智能",
+      "source": "offerstar",
+      "source_record_id": "offerstar-6a0a1fb669cf782802c44d6251229f9b",
+      "notice_url": "https://mp.weixin.qq.com/s/SPpfuen2iP2CKcd9ur6zZA",
+      "referral_code": null,
+      "updated_at": "2026-04-03T16:19:52+08:00",
+      "raw_title": "点众科技｜实习生招聘火热进行中！1000+offer 等你来拿！",
+      "raw_positions": "AI类研发类运营类小语种类剪辑/编导类;",
+      "raw_work_location": "北京大同杭州广州",
+      "raw_deadline": "",
+      "updated_label": "04-03"
+    }
+  ]
+}

@@ -23,7 +23,7 @@ export default function Home() {
 
         {/* Headline */}
         <h1 className="mb-5 font-editorial text-[38px] font-bold leading-[1.08] text-[#1C1C1C] md:mb-8 md:text-7xl md:leading-[1.08]">
-          别再用备忘录
+          别再用 Excel
           <br />
           管<span className="border-b border-[#1C1C1C] pb-0.5">校招</span>了
         </h1>
